@@ -7,6 +7,7 @@ import org.apache.flink.table.types.DataType;
 import org.apache.flink.types.Row;
 
 import com.alibaba.alink.common.mapper.Mapper;
+import com.alibaba.alink.common.utils.JsonConverter;
 import com.alibaba.alink.params.dataproc.HasClause;
 import com.alibaba.alink.pipeline.LocalPredictor;
 import com.alibaba.alink.pipeline.PipelineModel;
@@ -208,6 +209,32 @@ public class SelectMapperTest extends AlinkTestBase {
 		Row output = selectMapper.map(Row.of(1, "'abc'"));
 		try {
 			assertEquals(25, output.getArity());
+		} finally {
+			selectMapper.close();
+		}
+	}
+
+	@Test
+	public void testTemporalFunctions2() throws Exception {
+		TableSchema dataSchema = TableSchema.builder().fields(
+			new String[] {"id", "name"},
+			new DataType[] {DataTypes.INT(), DataTypes.STRING()}).build();
+		Params params = new Params();
+		params.set(HasClause.CLAUSE,
+			//"CAST('2021-01-01 00:06:00' AS TIMESTAMP)," +
+			//	 "TIMESTAMP'2021-01-01 00:06:00'," +
+			//"to_timestamp('2021-01-01 00:06:00', 'yyyy-MM-dd hh:mm:ss')," +
+				"FROM_UNIXTIME(10), " +
+				"unix_timestamp(CAST('2021-01-01 00:06:00' AS TIMESTAMP))," +
+				"now(), now(10)," +
+				"DATE_FORMAT_LTZ(CAST('2021-01-01 00:06:00' AS TIMESTAMP))"
+		);
+		CalciteSelectMapper selectMapper = new CalciteSelectMapper(dataSchema, params);
+		selectMapper.open();
+		Row output = selectMapper.map(Row.of(1, "'abc'"));
+		try {
+			System.out.println(JsonConverter.toJson(output));
+			assertEquals(5, output.getArity());
 		} finally {
 			selectMapper.close();
 		}

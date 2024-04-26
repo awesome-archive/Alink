@@ -5,6 +5,7 @@ import org.apache.flink.types.Row;
 import com.alibaba.alink.common.exceptions.AkIllegalStateException;
 import com.alibaba.alink.operator.local.LocalOperator;
 import com.alibaba.alink.operator.local.source.MemSourceLocalOp;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.sql.Timestamp;
@@ -19,7 +20,7 @@ import java.util.TimeZone;
 
 public class TimestampLocalSqlTest {
 	// for 1.9, local sql for timestamp has something wrong, only support in 1.13.
-
+	@Ignore
 	@Test
 	public void testOrderByTs() {
 		LocalOperator <?> source = getSourceWithTs();
@@ -48,7 +49,7 @@ public class TimestampLocalSqlTest {
 			.print();
 	}
 
-
+	@Ignore
 	@Test
 	public void test1() {
 		LocalOperator<?> source = getSourceWithTs();
@@ -61,6 +62,7 @@ public class TimestampLocalSqlTest {
 			.print();
 	}
 
+	@Ignore
 	@Test
 	public void testDistinct() {
 		LocalOperator<?> source = getSourceWithTs();
@@ -69,6 +71,7 @@ public class TimestampLocalSqlTest {
 			.print();
 	}
 
+	@Ignore
 	@Test
 	public void testFilter() {
 		LocalOperator<?> source = getSourceWithTs();

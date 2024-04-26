@@ -1,5 +1,7 @@
 package com.alibaba.alink.operator.local.sql;
 
+import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.ml.api.misc.param.Params;
 import org.apache.flink.table.api.TableSchema;
 import org.apache.flink.types.Row;
@@ -104,14 +106,15 @@ public final class FilterLocalOp extends BaseSqlApiLocalOp <FilterLocalOp>
 				System.out.println(ex.getMessage());
 			}
 		}
-		LocalOperator <?> outOp = LocalMLEnvironment.getInstance().getSqlExecutor().filter(in, predicate);
+
+		LocalOperator <?> outOp = in.select(String.format("*, %s as filter_col", predicate))
+			.filter("filter_col=true")
+			.select(in.getColNames());
+
 		this.setOutputTable(outOp.getOutputTable());
 	}
 
 	private static int checkCol(TableSchema schema, String colName) {
-		if (colName.contains("`")) {
-			colName = colName.replace("`", "");
-		}
 		int colIdx = TableUtil.findColIndex(schema, colName);
 		if (colIdx < 0) {
 			throw new AkIllegalStateException("col is not exsit.");

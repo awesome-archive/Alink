@@ -5,6 +5,7 @@ import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.ml.api.misc.param.Params;
 import org.apache.flink.table.api.TableSchema;
 
+import com.alibaba.alink.common.AlinkGlobalConfiguration;
 import com.alibaba.alink.common.MLEnvironmentFactory;
 import com.alibaba.alink.common.MTable;
 import com.alibaba.alink.common.exceptions.AkIllegalStateException;
@@ -112,7 +113,7 @@ public class CalciteSelectMapper extends Mapper {
 		addScalarFunctionConsumer.accept("TO_BASE64", StringFunctions.TOBASE64);
 		addScalarFunctionConsumer.accept("LPAD", StringFunctions.LPAD);
 		addScalarFunctionConsumer.accept("RPAD", StringFunctions.RPAD);
-		//addScalarFunctionConsumer.accept("REGEXP_REPLACE", StringFunctions.REGEXP_REPLACE);
+
 		addScalarFunctionConsumer.accept("REGEXP_EXTRACT", StringFunctions.REGEXP_EXTRACT);
 		addScalarFunctionConsumer.accept("CONCAT", StringFunctions.CONCAT);
 		addScalarFunctionConsumer.accept("CONCAT", StringFunctions.CONCAT3);
@@ -186,10 +187,6 @@ public class CalciteSelectMapper extends Mapper {
 		addScalarFunctionConsumer.accept("DATEDIFF", org.apache.calcite.linq4j.tree.Types.lookupMethod(
 			DateDiff.class, "eval", Timestamp.class, String.class));
 
-		// if have, ut will fail.
-		//addScalarFunctionConsumer.accept("REGEXP_REPLACE", org.apache.calcite.linq4j.tree.Types.lookupMethod(
-		//	RegExpReplace.class, "eval", String.class, String.class, String.class));
-
 		addScalarFunctionConsumer.accept("REGEXP", org.apache.calcite.linq4j.tree.Types.lookupMethod(
 			RegExp.class, "eval", String.class, String.class));
 
@@ -205,6 +202,14 @@ public class CalciteSelectMapper extends Mapper {
 			DateSub.class, "eval", String.class, int.class));
 		addScalarFunctionConsumer.accept("DATE_SUB", org.apache.calcite.linq4j.tree.Types.lookupMethod(
 			DateSub.class, "eval", Timestamp.class, int.class));
+
+		if (AlinkGlobalConfiguration.getFlinkVersion().equals("flink-1.9") ||
+			AlinkGlobalConfiguration.getFlinkVersion().equals("flink-1.10") ||
+			AlinkGlobalConfiguration.getFlinkVersion().equals("flink-1.11")) {
+			addScalarFunctionConsumer.accept("REGEXP_REPLACE", StringFunctions.REGEXP_REPLACE);
+			addScalarFunctionConsumer.accept("REGEXP_REPLACE", org.apache.calcite.linq4j.tree.Types.lookupMethod(
+				RegExpReplace.class, "eval", String.class, String.class, String.class));
+		}
 	}
 
 	@Override
@@ -309,7 +314,11 @@ public class CalciteSelectMapper extends Mapper {
 				preparedStatement.setObject(i + 1, v, java.sql.Types.FLOAT);
 			} else if (v instanceof Integer) {
 				preparedStatement.setObject(i + 1, v, Types.INTEGER);
-			} else {
+			}
+			//else if (v instanceof Timestamp) {
+			//	preparedStatement.setObject(i + 1, v, Types.TIMESTAMP);
+			//}
+			else {
 				preparedStatement.setObject(i + 1, v);
 			}
 		}

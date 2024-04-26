@@ -88,8 +88,6 @@ public abstract class CorrelationInsightBase {
 
 	public abstract Insight processData(LocalOperator <?>... sources);
 
-	public abstract void fillLayout();
-
 	@Override
 	public String toString() {
 		return insight.toString();
@@ -99,48 +97,5 @@ public abstract class CorrelationInsightBase {
 		https://www.microsoft.com/en-us/research/uploads/prod/2016/12/Insight-Types-Specification.pdf Significance of
 		Correlation
 	 */
-	public double computeScore(LocalOperator <?>... sources) {
-		//String[] columns = new String[] {insight.subject.breakdown.colName, MEASURE_NAME_PREFIX + "0"};
-		HashMap <Object, Number> meaValues1 = initData(sources[0]);
-		HashMap <Object, Number> meaValues2 = initData(sources[1]);
-		List <Tuple3 <Number, Number, Object>> points = new ArrayList <>();
-		for (Entry <Object, Number> entry : meaValues1.entrySet()) {
-			if (!meaValues2.containsKey(entry.getKey())) {
-				continue;
-			}
-			points.add(Tuple3.of(entry.getValue(), meaValues2.get(entry.getKey()), entry.getKey()));
-		}
-		if (points.size() < MIN_SAMPLE_NUM) {
-			return 0;
-		}
-		double[] xArray = new double[points.size()];
-		double[] yArray = new double[points.size()];
-		double maxX = 0;
-		double maxY = 0;
-		for (int i = 0; i < points.size(); i++) {
-			xArray[i] = points.get(i).f0.doubleValue();
-			yArray[i] = points.get(i).f1.doubleValue();
-			maxX = Math.max(maxX, Math.abs(xArray[i]));
-			maxY = Math.max(maxY, Math.abs(yArray[i]));
-		}
-		if (maxX == 0 || maxY == 0) {
-			return 0;
-		}
-		if (maxX > maxY) {
-			range = Math.round(maxX / maxY);
-		} else {
-			range = Math.round(maxY / maxX);
-		}
-
-		//PearsonsCorrelation pc = new PearsonsCorrelation();
-		SpearmansCorrelation sc = new SpearmansCorrelation();
-		double score = Math.abs(sc.correlation(xArray, yArray));
-		if (score >= MIN_CORRELATION_THRESHOLD) {
-			MTable mtable = mergeData(points, sources[0].getSchema(), sources[1].getSchema());
-			insight.layout.data = mtable;
-		} else {
-			score = 0;
-		}
-		return score;
-	}
+	public abstract double computeScore(LocalOperator <?>... sources);
 }

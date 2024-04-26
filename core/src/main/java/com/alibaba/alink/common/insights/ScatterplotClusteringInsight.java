@@ -32,7 +32,6 @@ public class ScatterplotClusteringInsight extends CrossMeasureCorrelationInsight
 		super(insight);
 	}
 
-	@Override
 	public void fillLayout() {
 		List<Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = String.format("%s(%s)", measures.get(0).aggr, measures.get(0).colName);
@@ -42,6 +41,9 @@ public class ScatterplotClusteringInsight extends CrossMeasureCorrelationInsight
 		StringBuilder builder = new StringBuilder();
 		if (null != insight.subject.subspaces && !insight.subject.subspaces.isEmpty()) {
 			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append(" 条件下，");
+		}
+		if (null != insight.subject.breakdown) {
+			builder.append("按照列").append(insight.subject.breakdown.colName).append("维度统计，");
 		}
 		builder.append(String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName()))
 			.append(" 与 ")
@@ -137,6 +139,7 @@ public class ScatterplotClusteringInsight extends CrossMeasureCorrelationInsight
 		}
 		MTable mTable = new MTable(rows, outSchema);
 		this.insight.layout.data = mTable;
+		this.fillLayout();
 		return score;
 	}
 

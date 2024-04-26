@@ -1,11 +1,12 @@
 package com.alibaba.alink.operator.common.tree;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 /**
  * Tree node in the decision tree that will be serialized to json and deserialized from json.
  */
-public class Node implements Serializable {
+public class Node implements Serializable, DeepCopyable <Node> {
 	private static final long serialVersionUID = 1788232094688921790L;
 	/**
 	 * featureIndex == -1 using for leaf
@@ -139,5 +140,22 @@ public class Node implements Serializable {
 	public Node setMissingSplit(int[] missingSplit) {
 		this.missingSplit = missingSplit;
 		return this;
+	}
+
+	@Override
+	public Node deepCopy() {
+		Node newNode = new Node();
+		newNode.featureIndex = this.featureIndex;
+		newNode.gain = this.gain;
+		newNode.counter = this.counter.deepCopy();
+		newNode.categoricalSplit = this.categoricalSplit == null
+			? null
+			: Arrays.copyOf(this.categoricalSplit, this.categoricalSplit.length);
+		newNode.continuousSplit = this.continuousSplit;
+		newNode.missingSplit = this.missingSplit == null
+			? null
+			: Arrays.copyOf(this.missingSplit, this.missingSplit.length);
+
+		return newNode;
 	}
 }

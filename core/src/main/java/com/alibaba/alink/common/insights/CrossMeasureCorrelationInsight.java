@@ -52,17 +52,19 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		}
 		LocalOperator <?>[] sourceInput = preprocess(sources);
 		insight.score = computeScore(sourceInput);
-		this.fillLayout();
 		return insight;
 	}
 
-	@Override
-	public void fillLayout() {
+	public void fillLayout(double score) {
+		String correlation = "正相关";
+		if (score < 0) {
+			correlation = "负相关";
+		}
 		List<Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = measures.get(0).aggr + "(" + measures.get(0).colName + ")";
-		this.insight.layout.yAxis = measures.get(1).aggr + "(" + measures.get(1).colName + ")";;
+		this.insight.layout.yAxis = measures.get(1).aggr + "(" + measures.get(1).colName + ")";
 		this.insight.layout.title = String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName())
-			+ " 和 " + String.format("%s的%s", measures.get(1).colName, measures.get(1).aggr.getCnName()) + " 存在相关性";
+			+ " 和 " + String.format("%s的%s", measures.get(1).colName, measures.get(1).aggr.getCnName()) + " 存在" + correlation;
 		StringBuilder builder = new StringBuilder();
 		if (null != insight.subject.subspaces && !insight.subject.subspaces.isEmpty()) {
 			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append(" 条件下，");
@@ -70,7 +72,8 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		builder.append(String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName()))
 			.append(" 与 ")
 			.append(String.format("%s的%s", measures.get(1).colName, measures.get(1).aggr.getCnName()))
-			.append(" 存在相关性");
+			.append(" 存在")
+			.append(correlation);
 		this.insight.layout.description = builder.toString();
 	}
 
@@ -92,12 +95,18 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		double[] yArray = new double[points.size()];
 		double maxY = Double.MIN_VALUE;
 		double minY = Double.MAX_VALUE;
-
+		double maxX = Double.MIN_VALUE;
+		double minX = Double.MAX_VALUE;
 		for (int i = 0; i < points.size(); i++) {
 			xArray[i] = points.get(i).f0.doubleValue();
 			yArray[i] = points.get(i).f1.doubleValue();
 			maxY = Math.max(maxY, yArray[i]);
 			minY = Math.min(minY, yArray[i]);
+			maxX = Math.max(maxX, xArray[i]);
+			minX = Math.min(minX, xArray[i]);
+		}
+		if (maxX - minX == 0 || maxY - minY == 0) {
+			return 0;
 		}
 		WeightedObservedPoints weightedObservedPoints = new WeightedObservedPoints();
 		for (int i = 0; i < points.size(); i++) {
@@ -115,12 +124,13 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		}
 		//PearsonsCorrelation pc = new PearsonsCorrelation();
 		SpearmansCorrelation sc = new SpearmansCorrelation();
-		double scoreB = Math.abs(sc.correlation(xArray, yArray));
-		double score = (scoreA + scoreB) / 2;
+		double scoreB = sc.correlation(xArray, yArray);
+		double score = (scoreA + Math.abs(scoreB)) / 2;
 		if (score >= MIN_CORRELATION_THRESHOLD) {
 			MTable mtable = mergeData(points, sources[0].getSchema(), sources[1].getSchema());
 			insight.layout.data = mtable;
 			insight.score = score;
+			this.fillLayout(params[1]);
 		} else {
 			score = 0;
 		}

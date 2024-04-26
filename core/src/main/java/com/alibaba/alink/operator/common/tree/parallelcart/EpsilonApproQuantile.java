@@ -2,6 +2,7 @@ package com.alibaba.alink.operator.common.tree.parallelcart;
 
 import com.alibaba.alink.common.exceptions.AkPreconditions;
 import com.alibaba.alink.common.exceptions.AkUnclassifiedErrorException;
+import com.alibaba.alink.operator.common.tree.DeepCopyable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +15,7 @@ import java.util.List;
 public final class EpsilonApproQuantile {
 	private static final Logger LOG = LoggerFactory.getLogger(EpsilonApproQuantile.class);
 
-	public final static class Entry {
+	public final static class Entry implements DeepCopyable <Entry> {
 		public double rMin;
 		public double rMax;
 		public double weight;
@@ -34,9 +35,14 @@ public final class EpsilonApproQuantile {
 		public double rMaxPre() {
 			return rMax - weight;
 		}
+
+		@Override
+		public Entry deepCopy() {
+			return new Entry(this.rMin, this.rMax, this.weight, this.value);
+		}
 	}
 
-	public final static class WQSummary {
+	public final static class WQSummary implements DeepCopyable <WQSummary> {
 		public ArrayList <Entry> entries = new ArrayList <>();
 
 		public void setCombine(WQSummary sa, WQSummary sb) {
@@ -266,6 +272,17 @@ public final class EpsilonApproQuantile {
 
 		static <T> T lastValue(List <T> list) {
 			return list.get(list.size() - 1);
+		}
+
+		@Override
+		public WQSummary deepCopy() {
+			WQSummary newWQSummary = new WQSummary();
+
+			for (Entry entry : this.entries) {
+				newWQSummary.entries.add(entry.deepCopy());
+			}
+
+			return newWQSummary;
 		}
 	}
 

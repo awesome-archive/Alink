@@ -1,8 +1,9 @@
 package com.alibaba.alink.operator.common.tree;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
-public class LabelCounter implements Serializable {
+public class LabelCounter implements Serializable, DeepCopyable <LabelCounter> {
 	private static final long serialVersionUID = 5749266833722532209L;
 	private double weightSum;
 	private int numInst;
@@ -56,5 +57,16 @@ public class LabelCounter implements Serializable {
 		}
 
 		return this;
+	}
+
+	@Override
+	public LabelCounter deepCopy() {
+		return new LabelCounter(
+			this.weightSum,
+			this.numInst,
+			this.distributions == null
+				? null
+				: Arrays.copyOf(this.distributions, this.distributions.length)
+		);
 	}
 }
