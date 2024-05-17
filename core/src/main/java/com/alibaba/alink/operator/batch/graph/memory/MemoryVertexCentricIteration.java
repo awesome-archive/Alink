@@ -1,5 +1,6 @@
 package com.alibaba.alink.operator.batch.graph.memory;
 
+import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.functions.MapPartitionFunction;
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
@@ -191,6 +192,40 @@ public class MemoryVertexCentricIteration {
 			.mapPartition(new OutputEdgeValues(graphStateHandler))
 			.withBroadcastSet(finalResult, "finalResult")
 			.name("memoryOut");
+		if (isToUnDigraph) {
+			// remove edges when isToUnDigraph is true added
+			DataSet <Tuple3 <Long, Long, Double>> outputTupleEdges = outputEdges.map(
+				new MapFunction <Row, Tuple3 <Long, Long, Double>>() {
+					@Override
+					public Tuple3 <Long, Long, Double> map(Row value) throws Exception {
+						return Tuple3.of((Long) value.getField(0), (Long) value.getField(1), (Double) value.getField(2));
+					}
+				}).name("outputEdges_to_tuple");
+			outputEdges = mappedDataSet.map(new ParseEdge(0, 1, hasWeight ? 2 : -1))
+				.union(outputTupleEdges).groupBy(0, 1).reduceGroup(
+				new GroupReduceFunction <Tuple3 <Long, Long, Double>, Row>() {
+					@Override
+					public void reduce(Iterable <Tuple3 <Long, Long, Double>> values, Collector <Row> out)
+						throws Exception {
+						long left = -1;
+						long right = -1;
+						double weight = -1;
+						for (Tuple3 <Long, Long, Double> edge : values) {
+							if (left == edge.f0 && right == edge.f1) {
+								Row row = Row.of(left, right, Math.max(weight, edge.f2));
+								out.collect(row);
+								left = -1;
+								right = -1;
+								weight = -1;
+							} else {
+								left = edge.f0;
+								right = edge.f1;
+								weight = edge.f2;
+							}
+						}
+					}
+				}).name("remove_added_edges_group");
+		}
 		if (needRemapping) {
 			outputVertices = IDMappingUtils.recoverDataSetWithIdMapping(outputVertices, nodeMapping, new int[] {0});
 			outputEdges = IDMappingUtils.recoverDataSetWithIdMapping(outputEdges, nodeMapping, new int[] {0, 1});

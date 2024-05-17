@@ -58,7 +58,7 @@ public class KCoreBatchOp extends BatchOperator <KCoreBatchOp>
 		BatchOperator <?> in = checkAndGetFirst(inputs);
 		String[] outCols = new String[] {"node1", "node2"};
 		String[] inputColNames = in.getColNames();
-		int sourceIdx = TableUtil.findColIndexWithAssertAndHint(inputColNames, getEdgeTargetCol());
+		int sourceIdx = TableUtil.findColIndexWithAssertAndHint(inputColNames, getEdgeSourceCol());
 		int targetIdx = TableUtil.findColIndexWithAssertAndHint(inputColNames, getEdgeTargetCol());
 		TypeInformation <?> sourceType = in.getColTypes()[sourceIdx];
 		Preconditions.checkState(sourceType == in.getColTypes()[targetIdx],
@@ -70,7 +70,7 @@ public class KCoreBatchOp extends BatchOperator <KCoreBatchOp>
 			false,
 			true,
 			getMLEnvironmentId(),
-			Integer.MAX_VALUE,
+			getMaxIter(),
 			new KcoreComputeFunction(getK()));
 
 		result = result.flatMap(new FlatMapFunction <Row, Row>() {

@@ -37,23 +37,14 @@ public class KCoreBatchOpTest extends AlinkTestBase {
 	public void testIntInputK1() {
 		List <Row> expectedOutput = Arrays.asList(
 			Row.of(1, 2),
-			Row.of(2, 1),
 			Row.of(1, 3),
-			Row.of(3, 1),
 			Row.of(1, 4),
-			Row.of(4, 1),
 			Row.of(2, 3),
-			Row.of(3, 2),
 			Row.of(2, 4),
-			Row.of(4, 2),
 			Row.of(3, 4),
-			Row.of(4, 3),
 			Row.of(3, 5),
-			Row.of(5, 3),
 			Row.of(3, 6),
-			Row.of(6, 3),
-			Row.of(5, 6),
-			Row.of(6, 5)
+			Row.of(5, 6)
 		);
 		verifyExecution(intInputRows, expectedOutput, 1);
 	}
@@ -62,17 +53,11 @@ public class KCoreBatchOpTest extends AlinkTestBase {
 	public void testIntInputK2() {
 		List <Row> expectedOutputK2 = Arrays.asList(
 			Row.of(1, 2),
-			Row.of(2, 1),
 			Row.of(1, 3),
-			Row.of(3, 1),
 			Row.of(1, 4),
-			Row.of(4, 1),
 			Row.of(2, 3),
-			Row.of(3, 2),
 			Row.of(2, 4),
-			Row.of(4, 2),
-			Row.of(3, 4),
-			Row.of(4, 3)
+			Row.of(3, 4)
 		);
 		verifyExecution(intInputRows, expectedOutputK2, 2);
 	}
@@ -108,11 +93,8 @@ public class KCoreBatchOpTest extends AlinkTestBase {
 		);
 		List <Row> expectedOutput = Arrays.asList(
 			Row.of(1L, 2L),
-			Row.of(2L, 1L),
 			Row.of(1L, 3L),
-			Row.of(3L, 1L),
-			Row.of(2L, 3L),
-			Row.of(3L, 2L));
+			Row.of(2L, 3L));
 		verifyExecution(inputRows, expectedOutput, 1);
 	}
 
@@ -126,11 +108,8 @@ public class KCoreBatchOpTest extends AlinkTestBase {
 		);
 		List <Row> expectedOutput = Arrays.asList(
 			Row.of("1", "2"),
-			Row.of("2", "1"),
 			Row.of("1", "3"),
-			Row.of("3", "1"),
-			Row.of("2", "3"),
-			Row.of("3", "2"));
+			Row.of("2", "3"));
 		verifyExecution(inputRows, expectedOutput, 1);
 	}
 

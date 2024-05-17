@@ -344,6 +344,12 @@ public class CalciteSelectMapper extends Mapper {
 		String clause = params.get(SelectParams.CLAUSE);
 		Long newMLEnvId = MLEnvironmentFactory.getNewMLEnvironmentId();
 
+		String[] colNames = dataSchema.getFieldNames();
+		String[] newColNames = new String[colNames.length];
+		for (int i = 0; i < colNames.length; i++) {
+			newColNames[i] = colNames[i].replace(".", "_alink_point_");
+		}
+
 		TypeInformation <?>[] colTypes = dataSchema.getFieldTypes();
 		TypeInformation <?>[] newColTypes = new TypeInformation[colTypes.length];
 		for (int i = 0; i < colTypes.length; i++) {
@@ -357,10 +363,15 @@ public class CalciteSelectMapper extends Mapper {
 		}
 
 		MemSourceBatchOp source = new MemSourceBatchOp(Collections.emptyList(),
-			new TableSchema(dataSchema.getFieldNames(), newColTypes))
+			new TableSchema(newColNames, newColTypes))
 			.setMLEnvironmentId(newMLEnvId);
 
-		String newClause = SelectUtils.convertRegexClause2ColNames(dataSchema.getFieldNames(), clause);
+		String newClause = clause;
+		for (int i = 0; i < colNames.length; i++) {
+			newClause.replaceAll(colNames[i], newColNames[i]);
+		}
+
+		newClause = SelectUtils.convertRegexClause2ColNames(newColNames, newClause);
 
 		TableSchema outputSchema = BatchSqlOperators.select(source, newClause).getOutputTable().getSchema();
 

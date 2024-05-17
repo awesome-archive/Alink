@@ -64,23 +64,29 @@ public class StatInsight {
 
 		dataAggr = dataAggr.select(new String[]{colName});
 		TypeInformation<?> type = dataAggr.getColTypes()[0];
-		Set <Object> valueSet = new HashSet<>();
+		HashMap<Object, Integer> valueCount = new HashMap <>();
+		List <Number> dataList = new ArrayList <>();
 		long count = 0;
 		for (Row row : dataAggr.getOutputTable().getRows()) {
 			if (null != row.getField(0)) {
-				valueSet.add(row.getField(0));
+				Object key = row.getField(0);
+				valueCount.put(key, valueCount.getOrDefault(key, 0) + 1);
 				count++;
 			}
 		}
 		// ignore 0 data
-		if (valueSet.size() == 0) {
+		if (valueCount.size() == 0 || count < 10) {
 			return insight;
 		}
+
 		LayoutData layoutData = new LayoutData();
 		if (!isNumberType(type)) {
 			String schema = "distinct_count_value int, count_value long";
 			Row row = new Row(2);
-			row.setField(0, valueSet.size());
+			for (Entry<Object, Integer> entry : valueCount.entrySet()) {
+				dataList.add(entry.getValue());
+			}
+			row.setField(0, valueCount.size());
 			row.setField(1, count);
 			MTable mTable = new MTable(new Row[]{row}, schema);
 			layoutData.data = mTable;
@@ -91,10 +97,15 @@ public class StatInsight {
 			TypeInformation<?> [] outTypes = new TypeInformation[]{
 				Types.INT, Types.LONG, type, type, Types.DOUBLE, Types.DOUBLE
 			};
+			for (Row row : dataAggr.getOutputTable().getRows()) {
+				if (row.getField(0) != null) {
+					dataList.add((Number) row.getField(0));
+				}
+			}
 			TableSummary ts = dataAggr.getOutputTable().summary();
 
 			Row row = new Row(6);
-			row.setField(0, valueSet.size());
+			row.setField(0, valueCount.size());
 			row.setField(1, count);
 			row.setField(2, ts.max(colName));
 			row.setField(3, ts.min(colName));
@@ -103,11 +114,30 @@ public class StatInsight {
 			MTable mTable = new MTable(new Row[]{row}, outCols, outTypes);
 			layoutData.data = mTable;
 		}
+		if (dataList.size() >= 10) {
+			DistributionUtil.DistributionInfo di = DistributionUtil.testDistribution(dataList);
+			if (null == di) {
+				if (!isNumberType(type)) {
+					insight.score = 0.2;
+				} else {
+					insight.score = 0.4;
+				}
+			} else {
+				insight.score = di.score * 0.8;
+				if (!isNumberType(type)) {
+					layoutData.description = String.format("%s的频次统计%s", colName, di.getCnDesc());
+				} else {
+					layoutData.description = String.format("%s%s", colName, di.getCnDesc());
+				}
+			}
+		} else {
+			insight.score = 0.2;
+		}
 
 		layoutData.title = "数据列 " + colName + " 统计数据";
 		layoutData.xAxis = colName;
 		insight.layout = layoutData;
-		insight.score = 0.8;
+		//insight.score = 0.8;
 		return insight;
 	}
 
@@ -222,7 +252,11 @@ public class StatInsight {
 
 			insight.type = InsightType.Distribution;
 			insight.layout = layoutData;
-			insight.score = 0.8;
+			if (idxList.size() == 1) {
+				insight.score = 0.5;
+			} else {
+				insight.score = 0.7;
+			}
 			insightList.add(insight);
 		}
 	}

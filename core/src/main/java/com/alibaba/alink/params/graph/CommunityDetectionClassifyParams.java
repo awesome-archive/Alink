@@ -36,16 +36,4 @@ public interface CommunityDetectionClassifyParams<T> extends
 	default Double getDelta() {return get(DELTA);}
 
 	default T setDelta(Double value) {return set(DELTA, value);}
-
-	@NameCn("K值")
-	@DescCn("每轮迭代中，设置1/k的node不更新它们的值。这样的设定可能使得社区发现的效果更好。")
-	ParamInfo <Integer> K = ParamInfoFactory
-		.createParamInfo("k", Integer.class)
-		.setDescription("each iteration, set 1/k of nodes don't update their values.")
-		.setHasDefaultValue(40)
-		.build();
-
-	default Integer getK() {return get(K);}
-
-	default T setK(Integer value) {return set(K, value);}
 }

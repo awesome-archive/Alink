@@ -72,7 +72,7 @@ public class CommunityDetectionClassifyBatchOpTest extends AlinkTestBase {
 		}
 		Assert.assertEquals(result.get("1"), "X");
 		Assert.assertEquals(result.get("2"), "Y");
-		Assert.assertEquals(result.get("3"), "X");
+		Assert.assertEquals(result.get("3"), "Y");
 		Assert.assertEquals(result.get("4"), "Y");
 	}
 

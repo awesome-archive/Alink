@@ -5,10 +5,12 @@ import org.apache.flink.ml.api.misc.param.ParamInfoFactory;
 
 import com.alibaba.alink.common.annotation.DescCn;
 import com.alibaba.alink.common.annotation.NameCn;
+import com.alibaba.alink.params.shared.iter.HasMaxIterDefaultAs100;
 import com.alibaba.alink.params.validators.MinValidator;
 
 public interface KCoreParams<T> extends
-	CommonGraphParams <T> {
+	GraphVertexCols <T>,
+	HasMaxIterDefaultAs100 <T> {
 	@NameCn("k的数目")
 	@DescCn("反复去除图中度小于等于k的点")
 	ParamInfo <Integer> K = ParamInfoFactory

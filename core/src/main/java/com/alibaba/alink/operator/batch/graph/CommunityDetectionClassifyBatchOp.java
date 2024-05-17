@@ -617,10 +617,10 @@ public class CommunityDetectionClassifyBatchOp extends BatchOperator <CommunityD
 				// or new label with negative weight
 				// or node already been set label in preprocess iteration
 				// node will keep label unchanged.
-				if (null == first || second.f3 || first.f2 < 0 || second.f1 >= 0) {
+				if (null == first || second.f3) {
 					res = Tuple5.of(second.f0, second.f1, second.f2, second.f3, false);
 				} else {
-					if (second.f2 == first.f2) {
+					if (second.f1 == first.f1) {
 						res = Tuple5.of(second.f0, second.f1, second.f2 * delta + first.f2 * (1 - delta), second.f3, false);
 					} else {
 						res = Tuple5.of(second.f0, first.f1, first.f2, second.f3, true);

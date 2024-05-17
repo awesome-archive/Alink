@@ -19,6 +19,37 @@ import java.util.List;
 public class SelectLocalOpTest {
 
 	@Test
+	public void testPointInColName() {
+		Row[] array = new Row[] {
+			Row.of(VectorUtil.getVector("$31$0:1.0 1:1.0 2:1.0 30:1.0"), "1.0  1.0  1.0  1.0", 1.0, 1.0, 1.0, 1.0, 1),
+			Row.of(VectorUtil.getVector("$31$0:1.0 1:1.0 2:0.0 30:1.0"), "1.0  1.0  0.0  1.0", 1.0, 1.0, 0.0, 1.0, 1),
+			Row.of(VectorUtil.getVector("$31$0:1.0 1:0.0 2:1.0 30:1.0"), "1.0  0.0  1.0  1.0", 1.0, 0.0, 1.0, 1.0, 1),
+			Row.of(VectorUtil.getVector("$31$0:1.0 1:0.0 2:1.0 30:1.0"), "1.0  0.0  1.0  1.0", 1.0, 0.0, 1.0, 1.0, 1),
+			Row.of(VectorUtil.getVector("$31$0:0.0 1:1.0 2:1.0 30:0.0"), "0.0  1.0  1.0  0.0", 0.0, 1.0, 1.0, 0.0, 0),
+			Row.of(VectorUtil.getVector("$31$0:0.0 1:1.0 2:1.0 30:0.0"), "0.0  1.0  1.0  0.0", 0.0, 1.0, 1.0, 0.0, 0),
+			Row.of(VectorUtil.getVector("$31$0:0.0 1:1.0 2:1.0 30:0.0"), "0.0  1.0  1.0  0.0", 0.0, 1.0, 1.0, 0.0, 0),
+			Row.of(VectorUtil.getVector("$31$0:0.0 1:1.0 2:1.0 30:0.0"), "0.0  1.0  1.0  0.0", 0.0, 1.0, 1.0, 0.0, 0)
+		};
+
+		LocalOperator <?> source = new MemSourceLocalOp(
+			Arrays.asList(array),
+			new TableSchema(
+				new String[] {"svec", "vec", "f0", "a.f1", "f2", "f3", "labels"},
+				new TypeInformation <?>[] {
+					AlinkTypes.SPARSE_VECTOR,
+					AlinkTypes.DENSE_VECTOR,
+					AlinkTypes.DOUBLE,
+					AlinkTypes.DOUBLE,
+					AlinkTypes.DOUBLE,
+					AlinkTypes.DOUBLE,
+					AlinkTypes.DOUBLE,
+				}));
+
+		source.select("a.f1, (a.f1+1) as c1").print();
+
+	}
+
+	@Test
 	public void testVector() {
 		Row[] array = new Row[] {
 			Row.of(VectorUtil.getVector("$31$0:1.0 1:1.0 2:1.0 30:1.0"), "1.0  1.0  1.0  1.0", 1.0, 1.0, 1.0, 1.0, 1),

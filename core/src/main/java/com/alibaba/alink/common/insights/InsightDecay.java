@@ -259,6 +259,9 @@ public class InsightDecay {
 				if (!entry.getValue().isEmpty()) {
 					for (int i = 0; i < entry.getValue().size(); i++) {
 						Insight insight = entry.getValue().get(i);
+						if (null == insight.layout) {
+							continue;
+						}
 						String xAxis = insight.layout.xAxis;
 						String yAxis = insight.layout.yAxis;
 						if (xAxis == null) {
@@ -306,7 +309,7 @@ public class InsightDecay {
 				return -Double.compare(o1.score, o2.score);
 			}
 		});
-		double[] thresholds = new double[]{1.0, 0.8, 0.5, 0.1, 0};
+		double[] thresholds = new double[]{1.0, 0.8, 0.5, 0.1, 0.01};
 		double highScore = thresholds[0];
 		List <Insight> sortResult = new ArrayList <>();
 		for (int i = 1; i < thresholds.length; i++) {

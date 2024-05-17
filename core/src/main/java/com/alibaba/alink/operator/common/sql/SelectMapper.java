@@ -36,9 +36,32 @@ public class SelectMapper extends Mapper {
 		String clause = params.get(SelectParams.CLAUSE);
 		clause = SelectUtils.convertRegexClause2ColNames(colNames, clause);
 
+		// deal with "." in col.
+		String[] newColNames = new String[colNames.length];
+
+		String[] splits = SelectUtils.split(clause, ",");
+		for (int i = 0; i < colNames.length; i++) {
+			if (colNames[i].contains(".")) {
+				newColNames[i] = colNames[i].replaceAll("\\.", "_alink_point_");
+				for (int j = 0; j < splits.length; j++) {
+					if (splits[j].startsWith("'") && splits[j].endsWith("'")) {
+						continue;
+					} else if (splits[j].startsWith("\"") && splits[j].endsWith("\"")) {
+						continue;
+					} else {
+						splits[j] = SelectUtils.replaceByCol(splits[j], colNames[i], newColNames[i]);
+					}
+				}
+			} else {
+				newColNames[i] = colNames[i];
+			}
+		}
+		clause = String.join(",", splits);
+		TableSchema newTableSchema = new TableSchema(newColNames, this.getDataSchema().getFieldTypes());
+
 		if (SelectUtils.isSimpleSelect(clause, colNames)) {
 			mappers = new Mapper[1];
-			mappers[0] = new SimpleSelectMapper(this.getDataSchema(), new Params().set(SelectParams.CLAUSE, clause));
+			mappers[0] = new SimpleSelectMapper(newTableSchema, new Params().set(SelectParams.CLAUSE, clause));
 			mappers[0].open();
 			TableSchema outSchema = mappers[0].getOutputSchema();
 			this.outColNames = outSchema.getFieldNames();
@@ -52,9 +75,9 @@ public class SelectMapper extends Mapper {
 				String curClause = clauseSplits[i].f0;
 				Params curParams = new Params().set(SelectParams.CLAUSE, curClause);
 				if (SelectUtils.isSimpleSelect(curClause, colNames)) {
-					mappers[i] = new SimpleSelectMapper(this.getDataSchema(), curParams);
+					mappers[i] = new SimpleSelectMapper(newTableSchema, curParams);
 				} else {
-					mappers[i] = new CalciteSelectMapper(this.getDataSchema(), curParams);
+					mappers[i] = new CalciteSelectMapper(newTableSchema, curParams);
 				}
 				mappers[i].open();
 				TableSchema outSchema = mappers[i].getOutputSchema();
@@ -63,6 +86,11 @@ public class SelectMapper extends Mapper {
 			}
 			this.outColNames = outColNames.toArray(new String[0]);
 			this.outColTypes = outColTypes.toArray(new TypeInformation <?>[0]);
+		}
+		for (int j = 0; j < this.outColNames.length; j++) {
+			if (this.outColNames[j].contains("_alink_point_")) {
+				this.outColNames[j] = this.outColNames[j].replaceAll("_alink_point_", "\\.");
+			}
 		}
 	}
 
@@ -123,25 +151,63 @@ public class SelectMapper extends Mapper {
 		String clause = params.get(SelectParams.CLAUSE);
 		String[] colNames = dataSchema.getFieldNames();
 		String newClause = SelectUtils.convertRegexClause2ColNames(colNames, clause);
-		if (SelectUtils.isSimpleSelect(newClause, colNames)) {
-			return SimpleSelectMapper.prepareIoSchemaImpl(dataSchema, new Params().set(SelectParams.CLAUSE,
-				newClause));
+
+		// deal with "." in col.
+		String[] newColNames = new String[colNames.length];
+
+		String[] splits = SelectUtils.split(newClause, ",");
+		for (int i = 0; i < colNames.length; i++) {
+			if (colNames[i].contains(".")) {
+				newColNames[i] = colNames[i].replaceAll("\\.", "_alink_point_");
+				for (int j = 0; j < splits.length; j++) {
+					if (splits[j].startsWith("'") && splits[j].endsWith("'")) {
+						continue;
+					} else if (splits[j].startsWith("\"") && splits[j].endsWith("\"")) {
+						continue;
+					} else if (splits[j].contains(colNames[i])) {
+						splits[j] = SelectUtils.replaceByCol(splits[j], colNames[i], newColNames[i]);
+					}
+				}
+			} else {
+				newColNames[i] = colNames[i];
+			}
+		}
+		newClause = String.join(",", splits);
+		TableSchema newTableSchema = new TableSchema(newColNames, dataSchema.getFieldTypes());
+
+		if (SelectUtils.isSimpleSelect(newClause, newColNames)) {
+			Tuple4 <String[], String[], TypeInformation <?>[], String[]> t4 =
+				SimpleSelectMapper.prepareIoSchemaImpl(newTableSchema,
+					new Params().set(SelectParams.CLAUSE, newClause));
+			String[] newOutColNames = t4.f1.clone();
+			for (int i = 0; i < newOutColNames.length; i++) {
+				if (newOutColNames[i].contains("_alink_point_")) {
+					newOutColNames[i] = newOutColNames[i].replaceAll("_alink_point_", "\\.");
+				}
+			}
+			return Tuple4.of(t4.f0, newOutColNames, t4.f2, t4.f3);
 		} else {
-			Tuple2 <String, Boolean>[] clauseSplits = SelectUtils.splitClauseBySimpleClause(newClause, colNames);
+			Tuple2 <String, Boolean>[] clauseSplits = SelectUtils.splitClauseBySimpleClause(newClause, newColNames);
 			mappers = new Mapper[clauseSplits.length];
 			List <String> outColNames = new ArrayList <>();
 			List <TypeInformation <?>> outColTypes = new ArrayList <>();
 			for (int i = 0; i < clauseSplits.length; i++) {
 				String curClause = clauseSplits[i].f0;
 				Params curParams = new Params().set(SelectParams.CLAUSE, curClause);
-				if (SelectUtils.isSimpleSelect(curClause, colNames)) {
-					mappers[i] = new SimpleSelectMapper(this.getDataSchema(), curParams);
+				if (SelectUtils.isSimpleSelect(curClause, newColNames)) {
+					mappers[i] = new SimpleSelectMapper(newTableSchema, curParams);
 				} else {
-					mappers[i] = new CalciteSelectMapper(this.getDataSchema(), curParams);
+					mappers[i] = new CalciteSelectMapper(newTableSchema, curParams);
 				}
 				mappers[i].open();
 				TableSchema outSchema = mappers[i].getOutputSchema();
-				outColNames.addAll(Arrays.asList(outSchema.getFieldNames()));
+				String[] curOutColNames = outSchema.getFieldNames().clone();
+				for (int j = 0; j < curOutColNames.length; j++) {
+					if (curOutColNames[j].contains("_alink_point_")) {
+						curOutColNames[j] = curOutColNames[j].replaceAll("_alink_point_", "\\.");
+					}
+				}
+				outColNames.addAll(Arrays.asList(curOutColNames));
 				outColTypes.addAll(Arrays.asList(outSchema.getFieldTypes()));
 				mappers[i].close();
 			}
@@ -156,7 +222,7 @@ public class SelectMapper extends Mapper {
 		}
 	}
 
-	//over write output schema, output cols order by clause, otherwise it will order by input schema,
+	//overwrite output schema, output cols order by clause, otherwise it will order by input schema,
 	@Override
 	public TableSchema getOutputSchema() {
 		if (this.outColNames == null || this.outColTypes == null) {

@@ -181,7 +181,7 @@ public class SelectUtils {
 	}
 
 	public static Tuple2 <String, Boolean>[] splitClauseBySimpleClause(String clause, String[] colNames) {
-		String[] splits = StringUtils.split(clause, ",");
+		String[] splits = SelectUtils.split(clause, ",");
 		Boolean[] isSimpleClauses = new Boolean[splits.length];
 		List <Tuple2 <String, Boolean>> out = new ArrayList <>();
 		String tmp = splits[0];
@@ -201,6 +201,16 @@ public class SelectUtils {
 		return out.toArray(new Tuple2[0]);
 	}
 
+	static String[] split(String str, String delimter) {
+		String regex = delimter + "(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)(?=(?:[^']*'[^']*')*[^']*$)";
+
+		String[] tmp = str.split(regex);
+		for (int i = 0; i < tmp.length; i++) {
+			tmp[i] = tmp[i].trim();
+		}
+		return tmp;
+	}
+
 	// todo: Only considered parentheses, not quotation marks。
 	static boolean isCompleteClause(String clause) {
 		int leftParenthesisCount = 0;
@@ -208,10 +218,18 @@ public class SelectUtils {
 		for (char c : clause.toCharArray()) {
 			if (c == '(') {
 				leftParenthesisCount++;
-			} else if(c == ')'){
+			} else if (c == ')') {
 				rightParenthesisCount++;
 			}
 		}
 		return leftParenthesisCount == rightParenthesisCount;
+	}
+
+	static String replaceByCol(String clause, String colName, String replaceColName) {
+		String result = clause.replaceAll("(?<=(?:[, \\(\\)\\+]))" + colName + "(?=(?:[, \\(\\)\\+]))", replaceColName);
+		result = result.replaceAll("(?<=(?:[, \\(\\)]))" + colName + "$", replaceColName);
+		result = result.replaceAll("^" + colName + "(?=(?:[, \\(\\)]))", replaceColName);
+		result = result.replaceAll("^" + colName + "$", replaceColName);
+		return result;
 	}
 }

@@ -11,6 +11,7 @@ import org.junit.Test;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class DvInsightDescriptionTest extends AlinkTestBase {
 
@@ -240,10 +241,14 @@ public class DvInsightDescriptionTest extends AlinkTestBase {
 		rows.add(Row.of(4, "a4", 0));
 		rows.add(Row.of(5, "a5", 0));
 		rows.add(Row.of(6, "a6", 0));
+		rows.add(Row.of(7, "a7", 0));
+		rows.add(Row.of(8, "a8", 0));
+		rows.add(Row.of(9, "a9", 0));
+		rows.add(Row.of(10, "a10", 0));
 
 		LocalOperator <?> source = new MemSourceLocalOp(rows, "col0 int, col1 string, label int");
 
-		Insight insight = StatInsight.basicStat(source, "label");
+		Insight insight = StatInsight.basicStat(source, "col0");
 		System.out.println(insight);
 		System.out.println(JsonConverter.toJson(DvInsightDescription.of(insight)));
 	}
@@ -268,24 +273,68 @@ public class DvInsightDescriptionTest extends AlinkTestBase {
 
 
 	@Test
-	public void testCrossMeasureCorrelation() {
+	public void testCluster2D() {
 		LocalOperator <?> source = new MemSourceLocalOp(MiningInsightTest.EMISSION, MiningInsightTest.EMISSION_SCHEMA);
 
 		Subject subject = new Subject()
-			.addSubspace(new Subspace("energy_source", "Petroleum"))
 			.setBreakdown(new Breakdown("year_"))
-			.addMeasure(new Measure("co", MeasureAggr.MAX))
-			.addMeasure(new Measure("so", MeasureAggr.MAX));
+			.addMeasure(new Measure("nox", MeasureAggr.AVG))
+			.addMeasure(new Measure("so", MeasureAggr.AVG));
+		Insight insight = new Insight();
+		insight.subject = subject;
+		insight.type = InsightType.Clustering2D;
+		CorrelationInsightBase miningInsight = MiningInsightFactory.getMiningInsight(insight);
+		miningInsight.setNeedGroup(true);
+		miningInsight.processData(source);
+		System.out.println(miningInsight);
 
+		System.out.println(JsonConverter.toJson(DvInsightDescription.of(miningInsight.insight)));
+	}
+
+	@Test
+	public void testCrossMeasureCorrelation() {
+		ArrayList <Row> rows = new ArrayList <>();
+		Random generator = new Random(11);
+		for (int year = 1000; year < 1100; year++) {
+			rows.add(Row.of(Math.random(), Math.random(), String.valueOf(year)));
+		}
+		for (int year = 2000; year < 2100; year++) {
+			rows.add(Row.of(Math.random() + 10, Math.random() + 10, String.valueOf(year)));
+		}
+		LocalOperator <?> source = new MemSourceLocalOp(rows, "co double,so double,year_ string");
+
+		Subject subject = new Subject()
+			//.addSubspace(new Subspace("energy_source", "Petroleum"))
+			.setBreakdown(new Breakdown("year_"))
+			.addMeasure(new Measure("co", MeasureAggr.AVG))
+			.addMeasure(new Measure("so", MeasureAggr.AVG));
 		Insight insight = new Insight();
 		insight.subject = subject;
 		insight.type = InsightType.CrossMeasureCorrelation;
 		CorrelationInsightBase miningInsight = MiningInsightFactory.getMiningInsight(insight);
-		miningInsight.setNeedGroup(true).setNeedFilter(true);
+		miningInsight.setNeedGroup(true);
 		miningInsight.processData(source);
 
-		System.out.println(miningInsight.insight);
+		System.out.println(JsonConverter.toJson(DvInsightDescription.of(miningInsight.insight)));
+	}
 
+	@Test
+	public void testCorrelation() {
+		LocalOperator <?> source = Data.getCriteo_10W_LocalSource();
+
+		Subject subject = new Subject()
+			.addSubspace(new Subspace("cf05", "4cf72387"))
+			.setBreakdown(new Breakdown("cf06"))
+			.addMeasure(new Measure("nf10", MeasureAggr.AVG));
+		Insight insight = new Insight();
+		insight.subject = subject;
+		insight.type = InsightType.Correlation;
+		insight.addAttachSubspace(new Subspace("cf05", "25c83c98"));
+		CorrelationInsight miningInsight = (CorrelationInsight) MiningInsightFactory.getMiningInsight(insight);
+		miningInsight.setNeedGroup(true);
+		miningInsight.processData(source, source);
+		System.out.println(miningInsight);
+		System.out.println(miningInsight.insight.layout.data);
 		System.out.println(JsonConverter.toJson(DvInsightDescription.of(miningInsight.insight)));
 	}
 
