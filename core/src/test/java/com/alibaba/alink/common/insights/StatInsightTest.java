@@ -8,7 +8,7 @@ public class StatInsightTest {
 	@Test
 	public void testBasicStat() throws Exception {
 		LocalOperator <?> data = Data.getCarSalesLocalSource();
-		Insight insight = StatInsight.basicStat(data, "sales");
+		Insight insight = StatInsight.basicStat(data, "sales", "销量");
 		System.out.println(insight);
 		System.out.println(JsonConverter.toJson(insight.layout.data));
 	}
@@ -16,7 +16,7 @@ public class StatInsightTest {
 	@Test
 	public void testBasicStat2() throws Exception {
 		LocalOperator <?> data = Data.getCarSalesLocalSource();
-		Insight insight = StatInsight.basicStat(data, "brand");
+		Insight insight = StatInsight.basicStat(data, "brand", "品牌");
 		System.out.println(insight);
 		System.out.println(JsonConverter.toJson(insight.layout.data));
 	}
@@ -24,7 +24,9 @@ public class StatInsightTest {
 	@Test
 	public void testDistribution() throws Exception {
 		LocalOperator <?> data = Data.getCarSalesLocalSource();
-		Insight insight = StatInsight.distribution(data, new Breakdown("category"), "sales");
+		Breakdown breakdown = new Breakdown("category");
+		breakdown.setColCnName("类目");
+		Insight insight = StatInsight.distribution(data, breakdown, "sales");
 		System.out.println(insight);
 		System.out.println(JsonConverter.toJson(insight.layout.data));
 	}

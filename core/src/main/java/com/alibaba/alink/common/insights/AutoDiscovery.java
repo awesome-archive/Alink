@@ -8,8 +8,9 @@ import com.alibaba.alink.operator.local.LocalOperator;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.alibaba.alink.common.insights.Mining.MEASURE_NAME_PREFIX;
 
@@ -120,13 +121,17 @@ public class AutoDiscovery {
 	}
 
 	static void basicStat(LocalOperator <?> data, final long stopTime, List <Insight> output) {
-		basicStat(data, data.getColNames(), stopTime, output);
+		basicStat(data, data.getColNames(), stopTime, output, new HashMap <>());
+	}
+
+	static void basicStat(LocalOperator <?> data, final long stopTime, List <Insight> output, Map <String, String> cnNamesMap) {
+		basicStat(data, data.getColNames(), stopTime, output, cnNamesMap);
 	}
 
 	static void basicStat(LocalOperator <?> data, String[] selectColNames, final long stopTime,
-						  List <Insight> output) {
+						  List <Insight> output, Map <String, String> cnNamesMap) {
 		for (String colName : selectColNames) {
-			Insight insight = StatInsight.basicStat(data, colName);
+			Insight insight = StatInsight.basicStat(data, colName, cnNamesMap.getOrDefault(colName, null));
 			output.add(insight);
 			if (isTimeOut(stopTime)) {break;}
 		}
@@ -273,12 +278,23 @@ public class AutoDiscovery {
 	}
 
 	public static void findInSingleSubspace(LocalOperator <?> data,
+											List <Subspace> subspaces,
+											double impact,
+											final long stopTime,
+											List <Insight> output,
+											int threadNum,
+											int threadId
+	) {
+		findInSingleSubspace(data, subspaces, impact, stopTime, output, threadNum, threadId, new HashMap <>());
+	}
+
+	public static void findInSingleSubspace(LocalOperator <?> data,
 									 List <Subspace> subspaces,
 									 double impact,
 									 final long stopTime,
 									 List <Insight> output,
 									 int threadNum,
-									 int threadId
+									 int threadId, Map <String, String> cnNamesMap
 	) {
 		long start = System.currentTimeMillis();
 		if (impact < AutoDiscoveryConstants.SCORE_THRESHOLD) {
@@ -287,6 +303,9 @@ public class AutoDiscovery {
 
 		if (null != subspaces && subspaces.size() > 0) {
 			data = Mining.filter(data, subspaces);
+			for (Subspace subspace : subspaces) {
+				subspace.setColCnName(subspace.colName, cnNamesMap);
+			}
 		}
 
 		long end = System.currentTimeMillis();
@@ -305,12 +324,16 @@ public class AutoDiscovery {
 
 		if (subspaces.isEmpty()) {
 			start = System.currentTimeMillis();
-			basicStat(data, stopTime, output);
+			basicStat(data, stopTime, output, cnNamesMap);
 			end = System.currentTimeMillis();
 			System.out.println("basic statics time:" + (end - start) / 1000 + "s.");
 		}
 
 		for (Tuple2 <Breakdown, List <Measure>> t2 : breakdownDetector.list) {
+			t2.f0.setColCnName(t2.f0.colName, cnNamesMap);
+			for (Measure measure : t2.f1) {
+				measure.setColCnName(measure.getColName(), cnNamesMap);
+			}
 			AutoDiscovery.findInSingleSubspace(data, subspaces, t2.f0, t2.f1,
 				impact, stopTime, output, threadNum, threadId);
 			if (isTimeOut(stopTime)) {break;}

@@ -30,4 +30,19 @@ public interface OdpsCatalogParams<T> extends WithParams <T>,
 	default T setRunningProject(String value) {
 		return set(RUNNING_PROJECT, value);
 	}
+
+	ParamInfo <String> STS_TOKEN = ParamInfoFactory
+		.createParamInfo("stsToken", String.class)
+		.setDescription("sts token")
+		.setOptional()
+		.setHasDefaultValue("")
+		.build();
+
+	default String getStsToken() {
+		return get(STS_TOKEN);
+	}
+
+	default T setStsToken(String value) {
+		return set(STS_TOKEN, value);
+	}
 }

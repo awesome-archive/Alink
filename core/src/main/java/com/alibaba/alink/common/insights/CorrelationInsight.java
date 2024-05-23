@@ -42,17 +42,19 @@ public class CorrelationInsight extends CorrelationInsightBase {
 		}
 		List <Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = this.insight.subject.breakdown.colName;
+		this.insight.layout.xAlias = this.insight.subject.breakdown.getColCnName();
 		this.insight.layout.yAxis = measures.get(0).aggr + "(" + measures.get(0).colName + ")";
+		this.insight.layout.yAlias = "%s的%s".format(measures.get(0).getColCnName(), measures.get(0).aggr.getCnName());
 		this.insight.layout.lineA = insight.getSubspaceStr(insight.subject.subspaces);
 		this.insight.layout.lineB = insight.getSubspaceStr(insight.attachSubspaces);
-		this.insight.layout.title = "子集的统计指标 " +
-			String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName())
-			+ " 存在" + correlation;
+		this.insight.layout.title = "子集的统计指标" +
+			String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
+			+ "存在" + correlation;
 		StringBuilder builder = new StringBuilder();
-		builder.append(insight.layout.lineA).append(" 与 ").append(insight.layout.lineB).append(" 条件下，");
-		builder.append("统计指标 ")
-			.append(String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName()))
-			.append(" 存在")
+		builder.append(insight.layout.lineA).append("与").append(insight.layout.lineB).append("条件下，");
+		builder.append("统计指标")
+			.append(String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
+			.append("存在")
 			.append(correlation);
 		//if (this.range.intValue() > MAX_SCALAR_THRESHOLD.intValue()) {
 		//	builder.append("*由于二者数值范围差异较大，对第二条线进行了缩放");

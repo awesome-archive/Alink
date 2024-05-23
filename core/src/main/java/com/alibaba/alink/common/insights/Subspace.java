@@ -1,10 +1,9 @@
 package com.alibaba.alink.common.insights;
 
 import java.io.Serializable;
+import java.util.Map;
 
-public class Subspace implements Serializable {
-
-	public final String colName;
+public class Subspace extends ColumnName implements Serializable {
 
 	public Object value;
 
@@ -26,6 +25,6 @@ public class Subspace implements Serializable {
 	}
 
 	public String strInDescription() {
-		return String.format("当%s=%s时 ", this.colName, this.value);
+		return String.format("当%s为%s时，", this.getColCnName(), this.value);
 	}
 }

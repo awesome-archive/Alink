@@ -2,27 +2,16 @@ package com.alibaba.alink.common.insights;
 
 import java.io.Serializable;
 
-public class Measure implements Serializable {
-
-	public String colName;
+public class Measure extends ColumnName implements Serializable {
 
 	public MeasureAggr aggr;
 
 	public Measure() {
-
 	}
 
 	public Measure(String colName, MeasureAggr aggr) {
 		this.colName = colName;
 		this.aggr = aggr;
-	}
-
-	public String getColName() {
-		return colName;
-	}
-
-	public void setColName(String colName) {
-		this.colName = colName;
 	}
 
 	public MeasureAggr getAggr() {

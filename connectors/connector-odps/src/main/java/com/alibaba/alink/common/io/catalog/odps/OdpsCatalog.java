@@ -62,7 +62,9 @@ import com.aliyun.odps.Partition;
 import com.aliyun.odps.PartitionSpec;
 import com.aliyun.odps.Project;
 import com.aliyun.odps.Table;
+import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
+import com.aliyun.odps.account.StsAccount;
 import com.aliyun.odps.data.ArrayRecord;
 import com.aliyun.odps.data.Record;
 import com.aliyun.odps.data.RecordWriter;
@@ -115,12 +117,16 @@ public final class OdpsCatalog extends InputOutputFormatCatalog {
 
 	private Odps getCurrentOdps() {
 		if (odps == null) {
-			odps = new Odps(
-				new AliyunAccount(
-					getParams().get(OdpsCatalogParams.ACCESS_ID),
-					getParams().get(OdpsCatalogParams.ACCESS_KEY)
-				)
-			);
+			String accessId = getParams().get(OdpsCatalogParams.ACCESS_ID);
+			String accessKey = getParams().get(OdpsCatalogParams.ACCESS_KEY);
+			String stsToken = getParams().get(OdpsCatalogParams.STS_TOKEN);
+			Account account = null;
+			if (!StringUtils.isNullOrWhitespaceOnly(stsToken)) {
+				account = new StsAccount(accessId, accessKey, stsToken);
+			} else {
+				account = new AliyunAccount(accessId, accessKey);
+			}
+			odps = new Odps(account);
 
 			odps.setEndpoint(getParams().get(OdpsCatalogParams.END_POINT));
 
@@ -757,6 +763,11 @@ public final class OdpsCatalog extends InputOutputFormatCatalog {
 			params.get(OdpsCatalogParams.PROJECT)
 		);
 
+		String stsToken = params.get(OdpsCatalogParams.STS_TOKEN);
+		if (!StringUtils.isNullOrWhitespaceOnly(stsToken)) {
+			conf.setSecurityToken(stsToken);
+		}
+
 		boolean isPartitioned = isPartitioned(objectPath);
 		String[] partitions = null;
 
@@ -951,6 +962,10 @@ public final class OdpsCatalog extends InputOutputFormatCatalog {
 			params.get(OdpsCatalogParams.END_POINT),
 			params.get(OdpsCatalogParams.PROJECT)
 		);
+		String stsToken = params.get(OdpsCatalogParams.STS_TOKEN);
+		if (!StringUtils.isNullOrWhitespaceOnly(stsToken)) {
+			conf.setSecurityToken(stsToken);
+		}
 
 		return new OdpsOutputFormat(conf, objectPath.getObjectName(), partition, isOverwriteSink);
 	}
@@ -1198,7 +1213,13 @@ public final class OdpsCatalog extends InputOutputFormatCatalog {
 								column.getType().equals(OdpsType.STRING) ? part.get(column.getName())
 									: Long.valueOf(part.get(column.getName())));
 						} else {
-							fullRecord.set(column.getName(), record.get(column.getName()));
+							Object val = record.get(column.getName());
+							if (val instanceof java.util.Date) {
+								fullRecord.set(column.getName(),
+									new java.sql.Timestamp(((java.util.Date) val).getTime()));
+							} else {
+								fullRecord.set(column.getName(), val);
+							}
 						}
 					}
 

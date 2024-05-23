@@ -4,7 +4,10 @@ import os
 import shutil
 import sys
 import zipfile
+import inspect
+import pandas as pd
 from typing import Dict, List
+from io import StringIO
 
 from alink.py4j_gateway import get_class_from_name
 from alink.type_conversion import to_py_value, to_java_value, to_java_values
@@ -52,7 +55,7 @@ def import_paths(paths: List[str]):
 
 
 class UdfConfig(object):
-    def __init__(self, config_json):
+    def __init__(self, config_json, wrap_callable=True):
         """
         the format of config_json is:
         {
@@ -65,6 +68,7 @@ class UdfConfig(object):
         print('the config: {}'.format(config_json))
         self._config: Dict = json.loads(config_json)
         self._fn = None
+        self.wrap_callable=wrap_callable
         import_paths(self._config.get('paths', []))
 
     def get_fn(self):
@@ -74,7 +78,10 @@ class UdfConfig(object):
         if 'className' in self._config:
             class_name = self._config['className']
             cls = get_class_from_name(class_name)
-            self._fn = cls()
+            if callable(cls) and not self.wrap_callable:
+                self._fn = cls
+            else:
+                self._fn = cls()
             return self._fn
         elif 'classObject' in self._config:
             code = self._config['classObject']
@@ -90,7 +97,7 @@ class UdfConfig(object):
                 obj = cloudpickle.loads(base64.b64decode(code))
             else:
                 raise ValueError("Invalid class object type: " + class_object_type)
-            if callable(obj):  # if obj is a func, wrap it to class with eval
+            if callable(obj) and self.wrap_callable:  # if obj is a func, wrap it to class with eval
                 obj = wrap_callable_to_class(obj)()
             self._fn = obj
             return self._fn
@@ -165,3 +172,72 @@ class PyTableFn:
 
     class Java:
         implements = ['com.alibaba.alink.common.pyrunner.fn.PyTableFnHandle']
+
+
+def convert_dtype_to_str(dtype):
+    if pd.api.types.is_integer_dtype(dtype):
+        return "long"
+    elif pd.api.types.is_float_dtype(dtype):
+        return "double"
+    elif pd.api.types.is_bool_dtype(dtype):
+        return "bool"
+    elif pd.api.types.is_string_dtype(dtype):
+        return "string"
+    print("Don't know type {}, use 'string'".format(dtype), flush=True)
+    return "string"
+
+
+def get_schema_str(df):
+    dtypes = df.dtypes
+    col_names = df.columns.to_numpy().tolist()
+    col_types = [convert_dtype_to_str(dtypes.get(col_name)) for col_name in col_names]
+    schema_str = ', '.join(
+        [
+            col_name + ' ' + col_type
+            for col_name, col_type in zip(col_names, col_types)
+        ]
+    )
+    return schema_str
+
+class PyDataFrameFn:
+    def __init__(self):
+        self._fn = None
+
+    def init(self, config_json: str):
+        config = UdfConfig(config_json, False)
+        self._fn = config.get_fn()
+
+    def setCollector(self, collector):
+        self._collector = collector
+
+    def calc(self, config, contents):
+        user_params_key = 'user_params'
+
+        input_col_names = json.loads(config['input_col_names'])
+        user_params = json.loads(config[user_params_key]) if user_params_key in config else {}
+        dfs = []
+        for index, (col_names, content) in enumerate(zip(input_col_names, contents)):
+            df = pd.read_csv(StringIO(content), names=col_names)
+            dfs.append(df)
+            print("input {}: {}".format(index, df.head()), flush=True)
+
+        sig = inspect.signature(self._fn)
+        if user_params_key in sig.parameters and \
+                sig.parameters[user_params_key].kind == inspect.Parameter.POSITIONAL_OR_KEYWORD:
+            print("detect user_params in parameters, pass user_params in", flush=True)
+            outputs = self._fn(*dfs, user_params=user_params)
+        else:
+            print("cannot detect user_params in parameters, not pass user_params in", flush=True)
+            outputs = self._fn(*dfs)
+
+        if not isinstance(outputs, (list, tuple)):
+            outputs = [outputs]
+        for index, output in enumerate(outputs):
+            output: pd.DataFrame = output
+            schema_str = get_schema_str(output)
+            print("output {}: {}".format(index, output.head()), flush=True)
+            content = output.to_csv(index=False, header=False)
+            self._collector.collectDataFrameFileName(content, schema_str)
+
+    class Java:
+        implements = ['com.alibaba.alink.common.pyrunner.pandas.PyDataFrameCalcRunner$PyDataFrameCalcHandler']

@@ -62,8 +62,14 @@ public class Insight implements Serializable {
 			if (layout.xAxis != null) {
 				stringBuilder.append("\n|-xAxis: ").append(layout.xAxis);
 			}
+			if (layout.xAlias != null) {
+				stringBuilder.append("\n|-xAlias: ").append(layout.xAlias);
+			}
 			if (layout.yAxis != null) {
 				stringBuilder.append("\n|-yAxis: ").append(layout.yAxis);
+			}
+			if (layout.yAlias != null) {
+				stringBuilder.append("\n|-yAlias: ").append(layout.yAlias);
 			}
 			if (layout.lineA != null) {
 				stringBuilder.append("\n|-lineA: ").append(layout.lineA);
@@ -111,9 +117,9 @@ public class Insight implements Serializable {
 		StringBuilder builder = new StringBuilder();
 		for (int i = 0; i < subspaces.size(); i++) {
 			Subspace subspace = subspaces.get(i);
-			builder.append(subspace.colName).append("=").append(subspace.value);
+			builder.append(subspace.getColCnName()).append("为").append(subspace.value);
 			if (i != subspaces.size() - 1) {
-				builder.append(" AND ");
+				builder.append(" 且 ");
 			}
 		}
 		return builder.toString();
@@ -121,7 +127,7 @@ public class Insight implements Serializable {
 
 	public String getTitle() {
 		String title = String.format("%s里%s的%s",
-			subject.breakdown.colName, subject.measures.get(0).colName, subject.measures.get(0).aggr.getCnName());
+			subject.breakdown.getColCnName(), subject.measures.get(0).getColCnName(), subject.measures.get(0).aggr.getCnName());
 		if (!subject.subspaces.isEmpty()) {
 			title = subject.subspaces.get(0).strInDescription() + title;
 		}

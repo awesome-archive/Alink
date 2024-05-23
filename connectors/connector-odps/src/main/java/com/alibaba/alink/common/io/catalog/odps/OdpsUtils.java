@@ -9,6 +9,7 @@ import com.aliyun.odps.Table;
 import com.aliyun.odps.TableSchema;
 import com.aliyun.odps.account.Account;
 import com.aliyun.odps.account.AliyunAccount;
+import com.aliyun.odps.account.StsAccount;
 import com.aliyun.odps.tunnel.TableTunnel;
 import com.aliyun.odps.tunnel.TableTunnel.DownloadSession;
 import com.aliyun.odps.tunnel.TunnelException;
@@ -122,11 +123,17 @@ public class OdpsUtils {
 
 	public static Odps initOdps(OdpsConf odpsConf) {
 		return initOdps(odpsConf.getAccessId(), odpsConf.getAccessKey(), odpsConf.getEndpoint(),
-			odpsConf.getProject());
+			odpsConf.getProject(), odpsConf.getSecurityToken());
 	}
 
-	public static Odps initOdps(String accessId, String accessKey, String endpoint, String defaultProject) {
-		Account account = new AliyunAccount(accessId, accessKey);
+	public static Odps initOdps(String accessId, String accessKey, String endpoint, String defaultProject,
+								String stsToken) {
+		Account account = null;
+		if (!org.apache.flink.util.StringUtils.isNullOrWhitespaceOnly(stsToken)) {
+			account = new StsAccount(accessId, accessKey, stsToken);
+		} else {
+			account = new AliyunAccount(accessId, accessKey);
+		}
 		Odps odps = new Odps(account);
 		odps.setEndpoint(endpoint);
 		if (defaultProject != null) {
@@ -271,7 +278,12 @@ public class OdpsUtils {
 	public static DownloadSession getTableTunnelDownloadSession(OdpsConf odpsConf, String tableName, String partition)
 		throws TunnelException, IOException {
 
-		Account account = new AliyunAccount(odpsConf.getAccessId(), odpsConf.getAccessKey());
+		Account account = null;
+		if (!org.apache.flink.util.StringUtils.isNullOrWhitespaceOnly(odpsConf.securityToken)) {
+			account = new StsAccount(odpsConf.accessId, odpsConf.accessKey, odpsConf.securityToken);
+		} else {
+			account = new AliyunAccount(odpsConf.accessId, odpsConf.accessKey);
+		}
 		Odps odps = new Odps(account);
 		odps.setEndpoint(odpsConf.getEndpoint());
 		odps.setDefaultProject(odpsConf.getProject());

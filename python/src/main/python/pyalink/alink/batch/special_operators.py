@@ -1,10 +1,12 @@
 from .common import PyScalarFnBatchOp as _PyScalarFnBatchOp
 from .common import PyTableFnBatchOp as _PyTableFnBatchOp
+from .common import PandasUdfBatchOp as _PandasUdfBatchOp
+from .common import GroupPandasUdfBatchOp as _GroupPandasUdfBatchOp
 from ..batch import BatchOperator
 from ..py4j_util import get_java_class
-from ..udf.utils import do_set_op_udf, do_set_op_udtf
+from ..udf.utils import do_set_op_udf, do_set_op_udtf, do_set_op_pandas
 
-__all__ = ['UDFBatchOp', 'UDTFBatchOp', 'TableSourceBatchOp']
+__all__ = ['UDFBatchOp', 'UDTFBatchOp', 'TableSourceBatchOp', 'PandasUdfBatchOp', 'GroupPandasUdfBatchOp']
 
 
 class UDFBatchOp(_PyScalarFnBatchOp):
@@ -66,3 +68,39 @@ class TableSourceBatchOp(BatchOperator):
         # noinspection PyProtectedMember
         j_op = table_source_batch_op_cls(table._j_table)
         super(TableSourceBatchOp, self).__init__(j_op=j_op, *args, **kwargs)
+
+class PandasUdfBatchOp(_PandasUdfBatchOp):
+    """
+    Similar as `UDFBatchOp` in Java side, except for supporting Python udf other than Java udf.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """"""
+        super(PandasUdfBatchOp, self).__init__(*args, **kwargs)
+
+    def setFunc(self, func):
+        """
+        Set UDF function
+
+        :param func: an instance with `eval` attribute, or `callable`, or an instance of :py:class:`UserDefinedScalarFunctionWrapper`.
+        :return: `self`.
+        """
+        return do_set_op_pandas(self, func)
+
+class GroupPandasUdfBatchOp(_GroupPandasUdfBatchOp):
+    """
+    Similar as `UDFBatchOp` in Java side, except for supporting Python udf other than Java udf.
+    """
+
+    def __init__(self, *args, **kwargs):
+        """"""
+        super(GroupPandasUdfBatchOp, self).__init__(*args, **kwargs)
+
+    def setFunc(self, func):
+        """
+        Set UDF function
+
+        :param func: an instance with `eval` attribute, or `callable`, or an instance of :py:class:`UserDefinedScalarFunctionWrapper`.
+        :return: `self`.
+        """
+        return do_set_op_pandas(self, func)

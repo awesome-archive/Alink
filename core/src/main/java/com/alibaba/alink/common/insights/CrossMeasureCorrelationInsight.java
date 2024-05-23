@@ -63,16 +63,18 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		List<Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = measures.get(0).aggr + "(" + measures.get(0).colName + ")";
 		this.insight.layout.yAxis = measures.get(1).aggr + "(" + measures.get(1).colName + ")";
-		this.insight.layout.title = String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName())
-			+ " 和 " + String.format("%s的%s", measures.get(1).colName, measures.get(1).aggr.getCnName()) + " 存在" + correlation;
+		this.insight.layout.xAlias = "%s的%s".format(measures.get(0).getColCnName(), measures.get(0).aggr.getCnName());
+		this.insight.layout.yAlias = "%s的%s".format(measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
+		this.insight.layout.title = String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
+			+ "和" + String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()) + "存在" + correlation;
 		StringBuilder builder = new StringBuilder();
 		if (null != insight.subject.subspaces && !insight.subject.subspaces.isEmpty()) {
-			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append(" 条件下，");
+			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append("条件下，");
 		}
-		builder.append(String.format("%s的%s", measures.get(0).colName, measures.get(0).aggr.getCnName()))
-			.append(" 与 ")
-			.append(String.format("%s的%s", measures.get(1).colName, measures.get(1).aggr.getCnName()))
-			.append(" 存在")
+		builder.append(String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
+			.append("与")
+			.append(String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()))
+			.append("存在")
 			.append(correlation);
 		this.insight.layout.description = builder.toString();
 	}

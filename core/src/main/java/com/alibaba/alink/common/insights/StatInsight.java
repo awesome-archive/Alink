@@ -58,7 +58,12 @@ public class StatInsight {
 	}
 
 	public static Insight basicStat(LocalOperator <?> dataAggr, String colName) {
+		return basicStat(dataAggr, colName, null);
+	}
+
+	public static Insight basicStat(LocalOperator <?> dataAggr, String colName, String colCnName) {
 		Insight insight = new Insight();
+		ColumnName columnName = new ColumnName(colName, colCnName);
 		insight.type = InsightType.BasicStat;
 		insight.score = 0;
 
@@ -125,17 +130,18 @@ public class StatInsight {
 			} else {
 				insight.score = di.score * 0.8;
 				if (!isNumberType(type)) {
-					layoutData.description = String.format("%s的频次统计%s", colName, di.getCnDesc());
+					layoutData.description = String.format("%s的频次统计%s", columnName.getColCnName(), di.getCnDesc());
 				} else {
-					layoutData.description = String.format("%s%s", colName, di.getCnDesc());
+					layoutData.description = String.format("%s%s", columnName.getColCnName(), di.getCnDesc());
 				}
 			}
 		} else {
 			insight.score = 0.2;
 		}
 
-		layoutData.title = "数据列 " + colName + " 统计数据";
+		layoutData.title = "列" + columnName.getColCnName() + "的统计数据";
 		layoutData.xAxis = colName;
+		layoutData.xAlias = columnName.getColCnName();
 		insight.layout = layoutData;
 		//insight.score = 0.8;
 		return insight;
@@ -173,7 +179,7 @@ public class StatInsight {
 		LayoutData layoutData = new LayoutData();
 		layoutData.data = dataAggr.getOutputTable();
 		layoutData.xAxis = breakdown.colName;
-		layoutData.yAxis = colName + " 统计结果";
+		layoutData.yAxis = colName + "的统计结果";
 		StringBuilder titleBuilder = new StringBuilder();
 		titleBuilder.append("不同 ").append(breakdown.colName).append(" 维度下，");
 		titleBuilder.append(colName).append(" 的统计值");
@@ -244,10 +250,12 @@ public class StatInsight {
 			LayoutData layoutData = new LayoutData();
 			layoutData.data = new MTable(rows, colNames, colTypes);
 			layoutData.xAxis = breakdown.colName;
-			layoutData.yAxis = entry.getKey() + " 统计结果";
+			layoutData.xAlias = breakdown.getColCnName();
+			layoutData.yAxis = entry.getKey() + "统计结果";
+			layoutData.yAlias = measures.get(entry.getValue().get(0)).getColCnName() + "统计结果";
 			StringBuilder titleBuilder = new StringBuilder();
-			titleBuilder.append("不同 ").append(breakdown.colName).append(" 维度下，");
-			titleBuilder.append(entry.getKey()).append(" 的统计值");
+			titleBuilder.append("不同").append(breakdown.getColCnName()).append("维度下，");
+			titleBuilder.append(measures.get(entry.getValue().get(0)).getColCnName()).append("的统计值");
 			layoutData.title = titleBuilder.toString();
 
 			insight.type = InsightType.Distribution;

@@ -127,3 +127,10 @@ def do_set_op_udtf(op, func):
             .setClassObjectType("CLOUDPICKLE_BASE64")
         return op
     raise ValueError("Invalid function: not a callable, an object with attr eval")
+
+def do_set_op_pandas(op, func):
+    if callable(func):
+        op.setClassObject(_to_cloudpickle_base64(func))
+        op.setClassObjectType("CLOUDPICKLE_BASE64")
+        return op
+    raise ValueError("Invalid function: not a callable")

@@ -126,7 +126,7 @@ public class DvInsightDescription implements Serializable {
 				fields[i] = new Field();
 				fields[i].id = colNames[i];
 				fields[i].code = colNames[i];
-				fields[i].alias = cnNamesMap.getOrDefault(colName, colName);;
+				fields[i].alias = cnNamesMap.getOrDefault(colName, colName);
 				fields[i].abstraction = new Abstraction();
 				if (i == 0) {
 					fields[i].abstraction.aggregation = "COUNTDISTINCT";
