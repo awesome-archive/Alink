@@ -89,7 +89,7 @@ public class JFreeChartUtil {
 	private static void timeSeries(Insight insight, String filename) {
 		LayoutData data = insight.layout;
 		TimeSeriesCollection timeseriescollection = new TimeSeriesCollection();
-		TimeSeries timeseries = new TimeSeries(data.xAxis);
+		TimeSeries timeseries = new TimeSeries(data.xAlias==null?data.xAxis:data.xAlias);
 		for (Row row : data.data.getRows()) {
 			if (null == row.getField(0) || null == row.getField(1)) {
 				continue;
@@ -99,7 +99,7 @@ public class JFreeChartUtil {
 		}
 		timeseriescollection.addSeries(timeseries);
 		JFreeChart chart = ChartFactory.createTimeSeriesChart(
-			data.title, data.xAxis, data.yAxis, timeseriescollection, true, true, false
+			data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, timeseriescollection, true, true, false
 		);
 		XYPlot xyplot = (XYPlot) chart.getPlot();
 		XYItemRenderer xyitemrenderer = xyplot.getRenderer();
@@ -118,10 +118,10 @@ public class JFreeChartUtil {
 			if (null == row.getField(0) || null == row.getField(1)) {
 				continue;
 			}
-			dataset.addValue((Number) row.getField(1), data.xAxis, (Comparable) row.getField(0));
+			dataset.addValue((Number) row.getField(1), data.xAlias==null?data.xAxis:data.xAlias, (Comparable) row.getField(0));
 		}
 		JFreeChart chart = ChartFactory.createLineChart(
-			data.title, data.xAxis, data.yAxis, dataset, PlotOrientation.VERTICAL, true, true, false
+			data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, dataset, PlotOrientation.VERTICAL, true, true, false
 		);
 		CategoryPlot xyplot = (CategoryPlot) chart.getPlot();
 		LineAndShapeRenderer renderer = new LineAndShapeRenderer();
@@ -169,10 +169,10 @@ public class JFreeChartUtil {
 			}
 		});
 		for (int i = 0; i < list.size(); i++) {
-			dataset.setValue(list.get(i).f1, data.xAxis, list.get(i).f0);
+			dataset.setValue(list.get(i).f1, data.xAlias==null?data.xAxis:data.xAlias, list.get(i).f0);
 		}
 		JFreeChart chart = ChartFactory.createBarChart(
-			data.title, data.xAxis, data.yAxis, dataset, PlotOrientation.VERTICAL, true, true, false
+			data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, dataset, PlotOrientation.VERTICAL, true, true, false
 		);
 		saveChart(chart, filename, 500, 500);
 	}
@@ -198,7 +198,7 @@ public class JFreeChartUtil {
 			dataset.addSeries(entry.getValue());
 		}
 		JFreeChart chart = ChartFactory.createScatterPlot(
-			data.title, data.xAxis, data.yAxis, dataset, PlotOrientation.HORIZONTAL, true, true, false
+			data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, dataset, PlotOrientation.HORIZONTAL, true, true, false
 		);
 		saveChart(chart, filename, 500, 500);
 	}
@@ -215,7 +215,7 @@ public class JFreeChartUtil {
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		dataset.addSeries(series);
 		JFreeChart chart = ChartFactory.createScatterPlot(
-			data.title, data.xAxis, data.yAxis, dataset, PlotOrientation.HORIZONTAL, true, true, false
+			data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, dataset, PlotOrientation.HORIZONTAL, true, true, false
 		);
 		saveChart(chart, filename, 500, 500);
 	}
@@ -250,7 +250,7 @@ public class JFreeChartUtil {
 			datasetA.addSeries(seriesA);
 			datasetB.addSeries(seriesB);
 			chart = ChartFactory.createXYLineChart(
-				data.title, data.xAxis, data.yAxis, null, PlotOrientation.HORIZONTAL, true, true, false
+				data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, null, PlotOrientation.HORIZONTAL, true, true, false
 			);
 			XYPlot xyplot = (XYPlot) chart.getPlot();
 			xyplot.setDataset(0, datasetA);
@@ -307,7 +307,7 @@ public class JFreeChartUtil {
 				datasetB.addValue(t.f2, data.lineB, t.f0);
 			}
 			chart = ChartFactory.createLineChart(
-				data.title, data.xAxis, data.yAxis, null, PlotOrientation.VERTICAL, true, true, false
+				data.title, data.xAlias==null?data.xAxis:data.xAlias, data.yAlias==null?data.yAxis:data.yAlias, null, PlotOrientation.VERTICAL, true, true, false
 			);
 			CategoryPlot xyplot = chart.getCategoryPlot();
 			xyplot.setDataset(0, datasetA);

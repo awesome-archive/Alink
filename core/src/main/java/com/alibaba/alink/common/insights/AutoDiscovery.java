@@ -21,6 +21,10 @@ public class AutoDiscovery {
 	}
 
 	public static List <Insight> find(LocalOperator <?> data, float limitedSeconds) throws Exception {
+		return find(data, limitedSeconds, new HashMap <>());
+	}
+
+	public static List <Insight> find(LocalOperator <?> data, float limitedSeconds, Map <String, String> cnNamesMap) throws Exception {
 		final long startTime = System.currentTimeMillis();
 		final long stopTime = startTime + (long) (1000 * limitedSeconds);
 		int threadNum = LocalOperator.getParallelism();
@@ -34,7 +38,7 @@ public class AutoDiscovery {
 		//whole data
 		if (!isTimeOut(stopTime)) {
 			findInSingleSubspace(data, new ArrayList <>(), 1.0, stopTime,
-				output, threadNum, 0);
+				output, threadNum, 0, cnNamesMap);
 		}
 
 		long end = System.currentTimeMillis();
@@ -63,7 +67,7 @@ public class AutoDiscovery {
 				start = System.currentTimeMillis();
 
 				findInSingleSubspace(data, Collections.singletonList(t2.f0),
-					t2.f1, stopTime, output, threadNum, 0);
+					t2.f1, stopTime, output, threadNum, 0, cnNamesMap);
 
 				end = System.currentTimeMillis();
 				System.out.println("subspace [" + i + "] single find time: " + (end - start) / 1000);

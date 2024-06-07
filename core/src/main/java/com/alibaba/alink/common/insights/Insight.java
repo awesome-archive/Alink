@@ -114,19 +114,25 @@ public class Insight implements Serializable {
 	}
 
 	public String getSubspaceStr(List <Subspace> subspaces) {
-		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < subspaces.size(); i++) {
-			Subspace subspace = subspaces.get(i);
-			builder.append(subspace.getColCnName()).append("为").append(subspace.value);
-			if (i != subspaces.size() - 1) {
-				builder.append(" 且 ");
+		if (null != subspaces && subspaces.size() > 0) {
+			StringBuilder builder = new StringBuilder();
+			builder.append("满足");
+			for (int i = 0; i < subspaces.size(); i++) {
+				Subspace subspace = subspaces.get(i);
+				builder.append(subspace.getColCnName()).append("=").append(subspace.value);
+				if (i != subspaces.size() - 1) {
+					builder.append("且");
+				}
 			}
+			builder.append("的数据子集，");
+			return builder.toString();
+		} else {
+			return "";
 		}
-		return builder.toString();
 	}
 
 	public String getTitle() {
-		String title = String.format("%s里%s的%s",
+		String title = String.format("按%s维度聚合，计算%s的%s",
 			subject.breakdown.getColCnName(), subject.measures.get(0).getColCnName(), subject.measures.get(0).aggr.getCnName());
 		if (!subject.subspaces.isEmpty()) {
 			title = subject.subspaces.get(0).strInDescription() + title;

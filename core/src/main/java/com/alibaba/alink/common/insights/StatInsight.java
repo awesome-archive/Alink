@@ -139,7 +139,8 @@ public class StatInsight {
 			insight.score = 0.2;
 		}
 
-		layoutData.title = "列" + columnName.getColCnName() + "的统计数据";
+		layoutData.title = columnName.getColCnName() + "的统计数据";
+		layoutData.description = layoutData.title;
 		layoutData.xAxis = colName;
 		layoutData.xAlias = columnName.getColCnName();
 		insight.layout = layoutData;
@@ -254,7 +255,7 @@ public class StatInsight {
 			layoutData.yAxis = entry.getKey() + "统计结果";
 			layoutData.yAlias = measures.get(entry.getValue().get(0)).getColCnName() + "统计结果";
 			StringBuilder titleBuilder = new StringBuilder();
-			titleBuilder.append("不同").append(breakdown.getColCnName()).append("维度下，");
+			titleBuilder.append("按").append(breakdown.getColCnName()).append("维度聚合，");
 			titleBuilder.append(measures.get(entry.getValue().get(0)).getColCnName()).append("的统计值");
 			layoutData.title = titleBuilder.toString();
 

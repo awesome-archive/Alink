@@ -3,7 +3,7 @@ package com.alibaba.alink.common.insights;
 public enum MeasureAggr {
 	COUNT("个数", "COUNT"),
 	AVG("平均值", "AVG"),
-	SUM("求和", "SUM"),
+	SUM("总和", "SUM"),
 	MAX("最大值", "MAX"),
 	MIN("最小值", "MIN");
 

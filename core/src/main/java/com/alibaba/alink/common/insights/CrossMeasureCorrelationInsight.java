@@ -60,23 +60,21 @@ public class CrossMeasureCorrelationInsight extends CorrelationInsightBase {
 		if (score < 0) {
 			correlation = "负相关";
 		}
+		if (Math.abs(score) >= 0.8) {
+			correlation = String.format("强%s", correlation);
+		}
 		List<Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = measures.get(0).aggr + "(" + measures.get(0).colName + ")";
 		this.insight.layout.yAxis = measures.get(1).aggr + "(" + measures.get(1).colName + ")";
 		this.insight.layout.xAlias = "%s的%s".format(measures.get(0).getColCnName(), measures.get(0).aggr.getCnName());
 		this.insight.layout.yAlias = "%s的%s".format(measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
-		this.insight.layout.title = String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
-			+ "和" + String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()) + "存在" + correlation;
+		this.insight.layout.title = insight.getSubspaceStr(insight.subject.subspaces) +
+			String.format("按%s聚合统计%s的%s", insight.subject.breakdown.getColCnName(),
+				measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
+			+ String.format("和%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
 		StringBuilder builder = new StringBuilder();
-		if (null != insight.subject.subspaces && !insight.subject.subspaces.isEmpty()) {
-			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append("条件下，");
-		}
-		builder.append(String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
-			.append("与")
-			.append(String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()))
-			.append("存在")
-			.append(correlation);
-		this.insight.layout.description = builder.toString();
+
+		this.insight.layout.description = String.format("%s。二者存在%s", insight.layout.title, correlation);
 	}
 
 	public double computeScore(LocalOperator <?>... sources) {

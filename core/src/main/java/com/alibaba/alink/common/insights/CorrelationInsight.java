@@ -40,6 +40,9 @@ public class CorrelationInsight extends CorrelationInsightBase {
 		if (score < 0) {
 			correlation = "负相关";
 		}
+		if (Math.abs(score) >= 0.8) {
+			correlation = String.format("强%s", correlation);
+		}
 		List <Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = this.insight.subject.breakdown.colName;
 		this.insight.layout.xAlias = this.insight.subject.breakdown.getColCnName();
@@ -47,14 +50,16 @@ public class CorrelationInsight extends CorrelationInsightBase {
 		this.insight.layout.yAlias = "%s的%s".format(measures.get(0).getColCnName(), measures.get(0).aggr.getCnName());
 		this.insight.layout.lineA = insight.getSubspaceStr(insight.subject.subspaces);
 		this.insight.layout.lineB = insight.getSubspaceStr(insight.attachSubspaces);
-		this.insight.layout.title = "子集的统计指标" +
-			String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
-			+ "存在" + correlation;
+		this.insight.layout.title = String.format("两个数据子集，按%s维度聚合%s的%s存在%s",
+			insight.subject.breakdown.getColCnName(), measures.get(0).getColCnName(),
+			measures.get(0).aggr.getCnName(), correlation);
 		StringBuilder builder = new StringBuilder();
-		builder.append(insight.layout.lineA).append("与").append(insight.layout.lineB).append("条件下，");
-		builder.append("统计指标")
-			.append(String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
-			.append("存在")
+		builder.append(insight.layout.lineA).append("和").append(insight.layout.lineB).append("，两个子集");
+		if (null != insight.subject.breakdown) {
+			builder.append("按").append(insight.subject.breakdown.getColCnName()).append("维度聚合，");
+		}
+		builder.append(String.format("%s的%s。", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
+			.append("二者存在")
 			.append(correlation);
 		//if (this.range.intValue() > MAX_SCALAR_THRESHOLD.intValue()) {
 		//	builder.append("*由于二者数值范围差异较大，对第二条线进行了缩放");

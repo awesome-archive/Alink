@@ -52,7 +52,7 @@ public class DistributionUtil {
 		}
 
 		public String getCnDesc() {
-			return String.format("数据符合%s", type.getCnName());
+			return String.format("符合%s", type.getCnName());
 		}
 
 		public String getEnDesc() {

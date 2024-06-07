@@ -7,13 +7,89 @@ import com.alibaba.alink.operator.local.sql.GroupByLocalOp;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class AutoDiscoveryTest {
 
 	@Test
 	@Ignore
-	public void test() throws Exception {
+	public void testCarSales() throws Exception {
+		LocalOperator <?> data = Data.getCarSalesLocalSource();
+		//LocalOperator<?> data = Data.getCensusLocalSource();
+		//LocalOperator <?> data = Data.getEmissionLocalSource();
+		//LocalOperator <?> data = Data.getCriteo_10W_LocalSource();
+		data.printStatistics();
+
+		//data = data.select("to_timestamp_from_format(`year`, 'YYYY/MM/DD') as ts, brand, category, model, sales");
+
+		long start = System.currentTimeMillis();
+
+		Map <String, String> cnNamesMap = new HashMap <>();
+
+		// year string, brand string, category string, model string, sales double
+		cnNamesMap.put("year", "年份");
+		cnNamesMap.put("brand", "品牌");
+		cnNamesMap.put("category", "车型");
+		cnNamesMap.put("model", "型号");
+		cnNamesMap.put("sales", "销量");
+
+		List <Insight> insights = AutoDiscovery.find(data, 60, cnNamesMap);
+
+		LocalOperator.execute();
+
+		List <Insight> result = InsightDecay.sortInsights(insights);
+
+		long end = System.currentTimeMillis();
+		System.out.println("insight size: " + result.size());
+		System.out.println("auto discovery run time: " + (end - start) / 1000 + "s.");
+
+		ToReport toReport = new ToReport(result);
+
+		toReport.withHtml("CarSales", true, 100);
+	}
+
+	@Test
+	@Ignore
+	public void testCensus() throws Exception {
+		//LocalOperator <?> data = Data.getCarSalesLocalSource();
+		LocalOperator <?> data = Data.getCensusLocalSource();
+		//LocalOperator <?> data = Data.getEmissionLocalSource();
+		//LocalOperator <?> data = Data.getCriteo_10W_LocalSource();
+		data.printStatistics();
+
+		//data = data.select("to_timestamp_from_format(`year`, 'YYYY/MM/DD') as ts, brand, category, model, sales");
+
+		long start = System.currentTimeMillis();
+
+		Map <String, String> cnNamesMap = new HashMap <>();
+
+		// Birthday string, AgeSegment string, MaritalStatus string, Sex string, AgeGroup string, CountOfPersons
+		cnNamesMap.put("Birthday", "生日");
+		cnNamesMap.put("AgeSegment", "年龄段");
+		cnNamesMap.put("MaritalStatus", "婚姻状况");
+		cnNamesMap.put("Sex", "性别");
+		cnNamesMap.put("CountOfPersons", "人数");
+
+		List <Insight> insights = AutoDiscovery.find(data, 60, cnNamesMap);
+
+		LocalOperator.execute();
+
+		List <Insight> result = InsightDecay.sortInsights(insights);
+
+		long end = System.currentTimeMillis();
+		System.out.println("insight size: " + result.size());
+		System.out.println("auto discovery run time: " + (end - start) / 1000 + "s.");
+
+		ToReport toReport = new ToReport(result);
+
+		toReport.withHtml("Census", true, 100);
+	}
+
+	@Test
+	@Ignore
+	public void testEmission() throws Exception {
 		//LocalOperator <?> data = Data.getCarSalesLocalSource();
 		//LocalOperator<?> data = Data.getCensusLocalSource();
 		LocalOperator <?> data = Data.getEmissionLocalSource();
@@ -24,7 +100,19 @@ public class AutoDiscoveryTest {
 
 		long start = System.currentTimeMillis();
 
-		List <Insight> insights = AutoDiscovery.find(data, 60);
+		Map <String, String> cnNamesMap = new HashMap <>();
+
+		// Year string, State string, ProducerType string, EnergySource string, CO2_kt double, SO2_kt double, NOx_kt
+		// double
+		cnNamesMap.put("Year", "年份");
+		cnNamesMap.put("State", "州");
+		cnNamesMap.put("ProducerType", "生产者类型");
+		cnNamesMap.put("EnergySource", "能量来源");
+		cnNamesMap.put("CO2_kt", "二氧化碳");
+		cnNamesMap.put("SO2_kt", "二氧化硫");
+		cnNamesMap.put("NOx_kt", "一氧化氮");
+
+		List <Insight> insights = AutoDiscovery.find(data, 60, cnNamesMap);
 
 		LocalOperator.execute();
 
@@ -37,6 +125,52 @@ public class AutoDiscoveryTest {
 		ToReport toReport = new ToReport(result);
 
 		toReport.withHtml("Emission", true, 100);
+	}
+
+	@Test
+	@Ignore
+	public void testCriteo_10W() throws Exception {
+		//LocalOperator <?> data = Data.getCarSalesLocalSource();
+		//LocalOperator<?> data = Data.getCensusLocalSource();
+		//LocalOperator <?> data = Data.getEmissionLocalSource();
+		LocalOperator <?> data = Data.getCriteo_10W_LocalSource();
+		data.printStatistics();
+
+		//data = data.select("to_timestamp_from_format(`year`, 'YYYY/MM/DD') as ts, brand, category, model, sales");
+
+		long start = System.currentTimeMillis();
+
+		Map <String, String> cnNamesMap = new HashMap <>();
+
+		// label int,nf01 int,nf02 int,nf03 int,nf04 int,nf05 int,nf06 int,nf07 int,nf08 int,nf09 "
+		//			+ "int,nf10 int,nf11 int,nf12 int,nf13 int,cf01 string,cf02 string,cf03 string,cf04 string,cf05
+		//			string,"
+		//			+ "cf06 string,cf07 string,cf08 string,cf09 string,cf10 string,cf11 string,cf12 string,cf13
+		//			string,cf14 "
+		//			+ "string,cf15 string,cf16 string,cf17 string,cf18 string,cf19 string,cf20 string,cf21 string,cf22
+		//			string,"
+		//			+ "cf23 string,cf24 string,cf25 string,cf26 string
+		cnNamesMap.put("label", "标签");
+		for (int i = 1; i <= 13; i++) {
+			cnNamesMap.put((i < 10) ? ("nf0" + i) : ("nf" + i), "第" + i + "个数值特征");
+		}
+		for (int i = 1; i <= 26; i++) {
+			cnNamesMap.put((i < 10) ? ("cf0" + i) : ("cf" + i), "第" + i + "个枚举特征");
+		}
+
+		List <Insight> insights = AutoDiscovery.find(data, 60, cnNamesMap);
+
+		LocalOperator.execute();
+
+		List <Insight> result = InsightDecay.sortInsights(insights);
+
+		long end = System.currentTimeMillis();
+		System.out.println("insight size: " + result.size());
+		System.out.println("auto discovery run time: " + (end - start) / 1000 + "s.");
+
+		ToReport toReport = new ToReport(result);
+
+		toReport.withHtml("Criteo_10W", true, 100);
 	}
 
 	@Test
@@ -208,7 +342,7 @@ public class AutoDiscoveryTest {
 	@Ignore
 	@Test
 	public void testFilter() {
-		LocalOperator<?> data = Data.getCarSalesLocalSource()
+		LocalOperator <?> data = Data.getCarSalesLocalSource()
 			.select("to_timestamp_from_format(`year`, 'YYYY/MM/DD') as ts, brand, category, model, sales");
 		FilterLocalOp filterLocalOp = new FilterLocalOp()
 			.setClause("`ts`=2008-12-28 00:00:00.0");
@@ -216,7 +350,6 @@ public class AutoDiscoveryTest {
 		data.link(filterLocalOp).print();
 
 	}
-
 
 	@Test
 	@Ignore

@@ -32,26 +32,20 @@ public class ScatterplotClusteringInsight extends CrossMeasureCorrelationInsight
 		super(insight);
 	}
 
-	public void fillLayout() {
+	public void fillLayout(int clusterNum) {
 		List<Measure> measures = this.insight.subject.measures;
 		this.insight.layout.xAxis = String.format("%s(%s)", measures.get(0).aggr, measures.get(0).colName);
 		this.insight.layout.yAxis = String.format("%s(%s)", measures.get(1).aggr, measures.get(1).colName);
 		this.insight.layout.xAlias = String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName());
-		this.insight.layout.xAlias = String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
-		this.insight.layout.title = String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName())
-			+ "与" + String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()) + "的聚类结果";
-		StringBuilder builder = new StringBuilder();
-		if (null != insight.subject.subspaces && !insight.subject.subspaces.isEmpty()) {
-			builder.append(insight.getSubspaceStr(insight.subject.subspaces)).append("条件下，");
-		}
-		if (null != insight.subject.breakdown) {
-			builder.append("按照列").append(insight.subject.breakdown.getColCnName()).append("维度统计，");
-		}
-		builder.append(String.format("%s的%s", measures.get(0).getColCnName(), measures.get(0).aggr.getCnName()))
-			.append("与")
-			.append(String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName()))
-			.append("可以聚成多个类");
-		this.insight.layout.description = builder.toString();
+		this.insight.layout.yAlias = String.format("%s的%s", measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
+		this.insight.layout.title = String.format("%s按%s维度聚合%s的%s和%s的%s",
+			insight.subject.subspaces.size() == 0 ? "" : insight.subject.subspaces.get(0).strInDescription(),
+			insight.subject.breakdown.getColCnName(),
+			measures.get(0).getColCnName(), measures.get(0).aggr.getCnName(),
+			measures.get(1).getColCnName(), measures.get(1).aggr.getCnName());
+		this.insight.layout.description = String.format("%s。(%s的%s，%s的%s)组成的二维点集，可以聚成%s个类",
+			insight.layout.title, measures.get(0).getColCnName(), measures.get(0).aggr.getCnName(),
+			measures.get(1).getColCnName(), measures.get(1).aggr.getCnName(), clusterNum);
 	}
 
 	@Override
@@ -141,7 +135,7 @@ public class ScatterplotClusteringInsight extends CrossMeasureCorrelationInsight
 		}
 		MTable mTable = new MTable(rows, outSchema);
 		this.insight.layout.data = mTable;
-		this.fillLayout();
+		this.fillLayout(result.f0);
 		return score;
 	}
 

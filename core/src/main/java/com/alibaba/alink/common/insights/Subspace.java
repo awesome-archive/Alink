@@ -25,6 +25,6 @@ public class Subspace extends ColumnName implements Serializable {
 	}
 
 	public String strInDescription() {
-		return String.format("当%s为%s时，", this.getColCnName(), this.value);
+		return String.format("筛选满足%s=%s条件的数据，", this.getColCnName(), this.value);
 	}
 }
